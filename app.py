@@ -7,13 +7,26 @@ from PIL import Image
 
 from flask_cors import CORS, cross_origin
 
+from settings.config import log_config, db_file
+import db.db_funcs as dbf
+
+# Logging setup
+import logging
+from logging import config as logging_config
+logging_config.dictConfig(log_config)
+logger = logging.getLogger()
+
 app = Flask(__name__)
 
 CORS(app)
 
 IMAGE_FOLDER = 'static/images'
+DB_PATH = 'db/db.sqlite3'
+
 images = os.listdir(IMAGE_FOLDER)
 images.sort()  # Ensure consistent ordering
+
+dbf.initialize_db(DB_PATH)
 
 @app.route('/')
 def index():
@@ -40,6 +53,7 @@ def random_image():
 @app.route('/random_image64')
 # @cross_origin()
 def random_image64():
+    logger.error('Random image64')
     if len(images)>0:
         filename = random.choice(images)
         image = IMAGE_FOLDER + '/' + filename
