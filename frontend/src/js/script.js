@@ -9,17 +9,14 @@ const currentImage = document.getElementById('currentImage');
 let currentFilename = '';
 
 keepBtn.addEventListener('click', function() {
-    console.log('Next button clicked');
     sendImgTypeGetNewImg('keep');
 });
 
 forgetBtn.addEventListener('click', function() {
-    console.log('Forget button clicked');
     sendImgTypeGetNewImg('forget');
 });
 
 workBtn.addEventListener('click', function() {
-    console.log('Work button clicked');
     sendImgTypeGetNewImg('work');
 });
 
@@ -31,7 +28,6 @@ async function fetchImage() {
         });
         const data = await response.json();
         currentFilename = data.filename;
-        console.log('Filename:', currentFilename);
 
 
         // Display the image
@@ -58,7 +54,6 @@ async function sendImgTypeGetNewImg(imgType) {
 
         const data = await response.json();
         currentFilename = data.filename;
-        console.log('Filename:', currentFilename);
 
 
         // Display the image
