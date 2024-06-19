@@ -2,8 +2,9 @@ const API_URL = 'http://127.0.0.1:5000'
 
 let firstLoad = true;
 const keepBtn = document.getElementById('keepBtn');
-const forgetBtn = document.getElementById('forgetBtn');
 const workBtn = document.getElementById('workBtn');
+const memeBtn = document.getElementById('memeBtn');
+const screenshotBtn = document.getElementById('screenshotBtn');
 
 const currentImage = document.getElementById('currentImage');
 let currentFilename = '';
@@ -12,8 +13,12 @@ keepBtn.addEventListener('click', function() {
     sendImgTypeGetNewImg('keep');
 });
 
-forgetBtn.addEventListener('click', function() {
-    sendImgTypeGetNewImg('forget');
+memeBtn.addEventListener('click', function() {
+    sendImgTypeGetNewImg('meme');
+});
+
+screenshotBtn.addEventListener('click', function() {
+    sendImgTypeGetNewImg('screenshot');
 });
 
 workBtn.addEventListener('click', function() {
