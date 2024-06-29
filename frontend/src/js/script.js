@@ -1,4 +1,6 @@
-const API_URL = 'http://127.0.0.1:5000'
+// import { API_URL } from './config.js';
+const API_URL = 'http://127.0.0.1:5000';
+let sessionId = getQueryVariable("session");
 
 let firstLoad = true;
 const keepBtn = document.getElementById('keepBtn');
@@ -27,13 +29,20 @@ workBtn.addEventListener('click', function() {
 
 async function fetchImage() {
     try {
-        const response = await fetch(API_URL + "/random_image64", {
+        const response = await fetch(API_URL + "/random_image64?session=" + sessionId , {
             method: 'GET',
             url: API_URL,
         });
-        const data = await response.json();
-        currentFilename = data.filename;
 
+
+        const data = await response.json();
+
+        if (data.success === false) {
+            alert(data.info);
+            return;
+        }
+
+        currentFilename = data.filename;
 
         // Display the image
         const imgElement = document.getElementById('imageElement');
@@ -48,7 +57,8 @@ async function sendImgTypeGetNewImg(imgType) {
     try {
         const postData = {
             filename: currentFilename,
-            imgType: imgType
+            imgType: imgType,
+            sessionId: sessionId
         };
         const response = await fetch(API_URL + "/tag_img_get_new", {
             method: "POST",
@@ -57,18 +67,39 @@ async function sendImgTypeGetNewImg(imgType) {
             body: JSON.stringify(postData)
         });
 
+        const statusCode = response.status;
         const data = await response.json();
-        currentFilename = data.filename;
+        log(data);
 
+        if (statusCode === 200) {
+            
+            currentFilename = data.filename;
+            // Display the image
+            const imgElement = document.getElementById('imageElement');
+            imgElement.src = 'data:image/jpeg;base64,' + data.image;
+        } else {
+            console.log(data.info);
+            
+        }
 
-        // Display the image
-        const imgElement = document.getElementById('imageElement');
-        imgElement.src = 'data:image/jpeg;base64,' + data.image;
 
     } catch (error) {
+        console.log(data.info);
         console.error('Error fetching image:', error);
     }
 }
+
+function getQueryVariable(variable) {
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+      var pair = vars[i].split("=");
+      if (pair[0] == variable) {
+        return pair[1];
+      }
+    } 
+    alert('Query Variable ' + variable + ' not found');
+  }
 
 
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Viewer</title>
+    <link href="./css/styles.css" rel="stylesheet">
+</head>
+<body class="absolute top-0 z-[-2] h-screen w-screen bg-neutral-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
+    <div class="container mx-auto">
+        <h1 class="text-slate-200 text-3xl font-bold mt-4">Image Classifier</h1>
+        <div class="flex flex-col items-center m-8">
+            <div id="currentImage" class="bg-black h-1/2 rounded-md">
+                <img id="imageElement" alt="Fetched Image" class="h-96 rounded-md">
+            </div>
+            <!-- <img src="{{ url_for('static', filename='images/' + image_name) }}" alt="Image" style="max-width:100%; height:auto;"> -->
+            <div class="py-8 flex justify-around w-1/2">
+                <button id="memeBtn" class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 w-36 rounded">Meme</button>
+                <button id="screenshotBtn" class="bg-purple-700 hover:bg-purple-900 text-white font-bold py-2 px-4 w-36 rounded">Screenshot</button>
+                <button id="keepBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 w-36 rounded">Keep</button>
+                <button id="workBtn" class="bg-lime-600 hover:bg-lime-800 text-white font-bold py-2 px-4 w-36 rounded">Work</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
