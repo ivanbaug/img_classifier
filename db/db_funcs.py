@@ -92,6 +92,7 @@ def update_session_processed_count(db_filepath: str, session_id: int):
         cursor.execute('SELECT COUNT(*) FROM image WHERE session_id=?', (session_id))
         total_count = cursor.fetchone()[0]
         cursor.execute('UPDATE session SET img_processed=?, img_total=? WHERE session_id=?', (processed_count, total_count, session_id))
+        return processed_count, total_count
 
 def get_sessions(db_filepath: str, **kwargs) -> list[dict]:
     """
