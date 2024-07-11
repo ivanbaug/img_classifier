@@ -5,9 +5,11 @@ import base64
 import io
 from PIL import Image
 
+import shutil
+
 from flask_cors import CORS, cross_origin
 
-from settings.config import log_config, db_file, IMAGE_FOLDER
+from settings.config import log_config, db_file, IMAGE_FOLDER, SESSION_OUTPUT_FOLDER
 import db.db_funcs as dbf
 
 # Logging setup
@@ -41,7 +43,7 @@ def initialize_images_in_db():
     sessions = dbf.get_sessions(db_file)
 
     for session in sessions:
-        simgs = dbf.get_imgs_from_session(db_file, session['session_id'])
+        simgs = dbf.get_img_names_from_session(db_file, session['session_id'])
         simgs_set = set(simgs)
 
         qty_imgs = len(images_set)
@@ -101,24 +103,24 @@ def random_image64():
 @app.route('/tag_img_get_new', methods=['POST'])
 def tag_img_get_new():
     # Update the tag/classification of the image
-    # print('*'*50)
     content = request.get_json()
-    # print(content)
     classification = content['imgType']
     filename = content['filename']
     session_id = content['sessionId']
     print(f"Tagging image {filename} as {classification}")
     dbf.update_image_classification(db_file, session_id, filename, classification)
-    dbf.update_session_processed_count(db_file, session_id)
+    processed_count, total_count = dbf.update_session_processed_count(db_file, session_id)
+
+    if (processed_count > 10 and processed_count % 10 == 0):
+        # Space to process the model
+        pass
+
     
     # Get a new image
     filename = dbf.obtain_random_unprocessed_image(db_file, session_id)
 
     if not filename:
         return jsonify({"success":False, "info": "No unprocessed images left"})
-
-    # if filename is None or '':
-    #     return "No unprocessed images left", 500
 
     image = IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
@@ -141,6 +143,38 @@ def get_response_scaled_image(image_path):
     return encoded_img
 
 
+@app.route('/copy_imgs_to_new_folder')
+# @cross_origin()
+def copy_imgs_to_new_folder():
+    print(request.args)
+    session_id = request.args.get('session')
+    if not session_id:
+        return jsonify({"success":False, "info": "No session ID received"})
+    
+    imgs_list = dbf.get_imgs_from_session(db_file, session_id)
+
+    img_classes = dbf.get_image_classes(db_file, session_id)
+
+    # Check if output folder exists
+    if not os.path.exists(SESSION_OUTPUT_FOLDER):
+        os.makedirs(SESSION_OUTPUT_FOLDER)
+
+    # Create subfolder with session id and create it if it doesn't exist
+    output_folder = SESSION_OUTPUT_FOLDER + '/S' + session_id
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # Create subfolders for each class
+    for img_class in img_classes:
+        if not os.path.exists(output_folder + '/' + img_class):
+            os.makedirs(output_folder + '/' + img_class)
+
+    for image in imgs_list:
+        if image['processed']:
+            shutil.copy(IMAGE_FOLDER + '/' + image['name'], output_folder + '/' +  image['classification'] + '/' + image['name'])
+
+    return jsonify({"success":True,  "info": "Done :)"})
+
 @app.route('/get_available_sessions')
 # @cross_origin()
 def get_available_sessions():
@@ -150,5 +184,3 @@ def get_available_sessions():
 if __name__ == '__main__':
     initialize_images_in_db()
     app.run(debug=True)
-
-# set([1,2,3,4]).difference(setb)

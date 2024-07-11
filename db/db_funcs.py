@@ -113,15 +113,35 @@ def get_sessions(db_filepath: str, **kwargs) -> list[dict]:
             session_list.append( { 'session_id':row[0], 'completed': row[1] > 0, 'last_updated': row[2], 'imgs_are_available': row[3] > 0, 'img_total': row[4], 'img_processed': row[5]})
         return session_list
     
-def get_imgs_from_session(db_filepath: str, session_id: int) -> list[str]:
+def get_img_names_from_session(db_filepath: str, session_id: int) -> list[str]:
     """
-    Get the images from a session.
+    Get the names of the images from a session.
     """
     with db_ops(db_filepath) as cursor:
         cursor.execute('SELECT name FROM image WHERE session_id=?', (session_id,))
         rows = cursor.fetchall()
         img_list = [row[0] for row in rows]
         return img_list
+    
+def get_imgs_from_session(db_filepath: str, session_id: int) -> list[str]:
+    """
+    Get the images and its data from a session.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('SELECT img_id, name, session_id, processed, classification FROM image WHERE session_id=?', (session_id,))
+        rows = cursor.fetchall()
+        img_data_list = [ { 'img_id': row[0], 'name': row[1], 'session_id': row[2], 'processed': row[3] > 0, 'classification': row[4]} for row in rows]
+        return img_data_list
+    
+def get_image_classes(db_filepath: str, session_id: int) -> list[str]:
+    """
+    Get the classes of the images from a session.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('SELECT DISTINCT classification FROM image WHERE session_id=?', (session_id,))
+        rows = cursor.fetchall()
+        class_list = [row[0] for row in rows]
+        return class_list
     
 def new_session(db_filepath: str, img_total: int, img_processed: int, img_available: bool = False) -> int:
     """
