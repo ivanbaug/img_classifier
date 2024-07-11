@@ -171,3 +171,4 @@ cython_debug/
 static/images/
 img_input/
 sorted_images/
+static/output/
