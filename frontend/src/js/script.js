@@ -8,6 +8,10 @@ const workBtn = document.getElementById('workBtn');
 const memeBtn = document.getElementById('memeBtn');
 const screenshotBtn = document.getElementById('screenshotBtn');
 
+const mainMenuBtn = document.getElementById('mainMenuBtn');
+const savePrcBtn = document.getElementById('savePrcBtn');
+
+
 const currentImage = document.getElementById('currentImage');
 let currentFilename = '';
 
@@ -25,6 +29,14 @@ screenshotBtn.addEventListener('click', function() {
 
 workBtn.addEventListener('click', function() {
     sendImgTypeGetNewImg('work');
+});
+
+mainMenuBtn.addEventListener('click', function() {
+    document.location.href = 'index.html';
+});
+
+savePrcBtn.addEventListener('click', function() {
+    copyImgsToNewFolder();
 });
 
 async function fetchImage() {
@@ -86,6 +98,29 @@ async function sendImgTypeGetNewImg(imgType) {
     } catch (error) {
         console.log(data.info);
         console.error('Error fetching image:', error);
+    }
+}
+
+async function copyImgsToNewFolder() {
+    try {
+        const response = await fetch(API_URL + "/copy_imgs_to_new_folder?session=" + sessionId , {
+            method: 'GET',
+            url: API_URL,
+        });
+
+
+        const data = await response.json();
+
+        if (data.success === false) {
+            alert(data.info);
+            return;
+        }
+        else {
+            alert(data.info);
+        }
+
+    } catch (error) {
+        // console.error('Error fetching image:', error);
     }
 }
 
