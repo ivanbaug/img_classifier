@@ -172,3 +172,5 @@ static/images/
 img_input/
 sorted_images/
 static/output/
+tmp/
+*.h5
