@@ -46,7 +46,6 @@ async function fetchImage() {
             url: API_URL,
         });
 
-
         const data = await response.json();
 
         if (data.success === false) {
@@ -54,11 +53,38 @@ async function fetchImage() {
             return;
         }
 
-        currentFilename = data.filename;
+        currentFilename = data.filename;    
+        // check file type by reading the file extension
+        const fileExt = currentFilename.split('.').pop();
+        const contentType = getContentType(fileExt);
 
         // Display the image
         const imgElement = document.getElementById('imageElement');
-        imgElement.src = 'data:image/jpeg;base64,' + data.image;
+        imgElement.src = `data:${contentType};base64,` + data.image;
+
+        // If stats received, display them
+        if (data.stats) {
+            const statsElement = document.getElementById('listStats');
+            const totalStatsElement = document.getElementById('totalStats');
+            const total = data.stats.reduce((a, b) => a + b.amount, 0);
+            console.log(total);
+            const objRemaining = data.stats.find(obj => obj.class === '');
+            const processed = total - objRemaining.amount;
+
+            totalStatsElement.innerHTML = `Total: ${total} Processed: ${processed} Remaining: ${objRemaining.amount}`;
+
+            // Display the stats as a ul list
+            statsElement.innerHTML = '';
+            data.stats.forEach(stat => {
+                // skip if class is empty
+                if (stat.class == '') {
+                    return;
+                }
+                const li = document.createElement('li');
+                li.innerHTML = `${stat.class}: ${stat.amount}`;
+                statsElement.appendChild(li);
+            });            
+        }
 
     } catch (error) {
         console.error('Error fetching image:', error);
@@ -81,19 +107,46 @@ async function sendImgTypeGetNewImg(imgType) {
 
         const statusCode = response.status;
         const data = await response.json();
-        log(data);
+        console.log(data);
 
         if (statusCode === 200) {
             
             currentFilename = data.filename;
+            // check file type by reading the file extension
+            const fileExt = currentFilename.split('.').pop();
+            const contentType = getContentType(fileExt);
+            
             // Display the image
             const imgElement = document.getElementById('imageElement');
-            imgElement.src = 'data:image/jpeg;base64,' + data.image;
+            imgElement.src = `data:${contentType};base64,` + data.image;
+
+            // If stats received, display them
+            if (data.stats) {
+                const statsElement = document.getElementById('listStats');
+                const totalStatsElement = document.getElementById('totalStats');
+                const total = data.stats.reduce((a, b) => a + b.amount, 0);
+                console.log(total);
+                const objRemaining = data.stats.find(obj => obj.class === '');
+                const processed = total - objRemaining.amount;
+
+                totalStatsElement.innerHTML = `Total: ${total} Processed: ${processed} Remaining: ${objRemaining.amount}`;
+
+                // Display the stats as a ul list
+                statsElement.innerHTML = '';
+                data.stats.forEach(stat => {
+                    // skip if class is empty
+                    if (stat.class == '') {
+                        return;
+                    }
+                    const li = document.createElement('li');
+                    li.innerHTML = `${stat.class}: ${stat.amount}`;
+                    statsElement.appendChild(li);
+                });            
+            }
         } else {
             console.log(data.info);
             
         }
-
 
     } catch (error) {
         console.log(data.info);
@@ -122,6 +175,42 @@ async function copyImgsToNewFolder() {
     } catch (error) {
         // console.error('Error fetching image:', error);
     }
+}
+
+function getContentType(fileExt) {
+    // assign content type based on file extension
+    let contentType = '';
+    switch (fileExt.toLowerCase()) {
+        case 'gif':
+            contentType = 'image/gif';
+            break;
+        case 'jpg':
+            contentType = 'image/jpeg';
+        case 'jpeg':
+            contentType = 'image/jpeg';
+            break;
+        case 'png':
+            contentType = 'image/png';
+            break;
+        case 'tiff':
+            contentType = 'image/tiff';
+            break;
+        case 'icon':
+            contentType = 'image/vnd.microsoft.icon';
+            break;
+        case 'x-icon':
+            contentType = 'image/x-icon';
+            break;
+        case 'djvu':
+            contentType = 'image/vnd.djvu';
+            break;
+        case 'svg':
+            contentType = 'image/svg+xml';
+            break;
+        default:
+            contentType = 'image/jpeg';
+    }
+    return contentType;
 }
 
 function getQueryVariable(variable) {
