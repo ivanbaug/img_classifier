@@ -35,7 +35,6 @@ def initialize_images_in_db():
 
     images = list(images_set) # Remove duplicates
 
-
     # Set values not available
     dbf.set_not_available(db_file)
 
@@ -98,7 +97,9 @@ def random_image64():
 
     image = IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
-    return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK"})
+
+    stats = dbf.get_stats_from_session(db_file, session_id)
+    return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats})
 
 @app.route('/tag_img_get_new', methods=['POST'])
 def tag_img_get_new():
@@ -124,7 +125,9 @@ def tag_img_get_new():
 
     image = IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
-    return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK"})
+
+    stats = dbf.get_stats_from_session(db_file, session_id)
+    return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats})
 
 
 def get_response_scaled_image(image_path):
@@ -138,7 +141,9 @@ def get_response_scaled_image(image_path):
 
 
     byte_arr = io.BytesIO()
+    # pil_img.save(byte_arr, format=img_format) # convert the PIL image to byte array
     pil_img.save(byte_arr, format=img_format) # convert the PIL image to byte array
+
     encoded_img = base64.encodebytes(byte_arr.getvalue()).decode('ascii') # encode as base64
     return encoded_img
 

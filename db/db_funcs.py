@@ -168,3 +168,15 @@ def set_session_imgs_available(db_filepath: str, session_id: int):
     with db_ops(db_filepath) as cursor:
         cursor.execute('UPDATE session SET imgs_are_available=? WHERE session_id=?', (True, session_id))
 
+def get_stats_from_session(db_filepath: str, session_id: int) -> dict:
+    """
+    Get the stats from a session.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute("select classification as img_class, sum(1) as img_amount  from image where image.session_id = ? group by classification;", (session_id,))
+        rows = cursor.fetchall()
+        r = []
+        for row in rows:
+            r.append({'class': row[0], 'amount': row[1]})
+        return r
+
