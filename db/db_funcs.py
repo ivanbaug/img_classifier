@@ -29,7 +29,7 @@ def initialize_db(db_filepath: str) -> None:
         cursor.execute('CREATE TABLE IF NOT EXISTS session (session_id INTEGER PRIMARY KEY, '
                        'completed BOOLEAN, last_updated TIMESTAMP, imgs_are_available BOOLEAN, img_total INT, img_processed INT)')
         cursor.execute('CREATE TABLE IF NOT EXISTS image (img_id INTEGER PRIMARY KEY, name TEXT, '
-                       'session_id INT, processed BOOLEAN, classification TEXT, FOREIGN KEY(session_id) REFERENCES session(session_id))')
+                       'session_id INT, processed BOOLEAN, label TEXT, FOREIGN KEY(session_id) REFERENCES session(session_id))')
         logger.info('Database initialized')
 
 # TODO: Remove if not used
@@ -53,7 +53,7 @@ def initialize_images_session(db_filepath: str, images: list[str], session_id: i
     """
     with db_ops(db_filepath) as cursor:
         img_array = [(i, session_id, False, '') for i in images]
-        cursor.executemany('INSERT INTO image(name, session_id, processed, classification) '
+        cursor.executemany('INSERT INTO image(name, session_id, processed, label) '
                            'VALUES (?, ?, ?, ?)', img_array)
         logger.info(f'Images initialized for session: {session_id}')
 
@@ -74,13 +74,13 @@ def obtain_random_unprocessed_image(db_filepath: str, session_id: int) -> str:
             logger.info('No unprocessed images found')
             return ''
         
-def update_image_classification(db_filepath: str, session_id: int, filename: str, classification: str):
+def update_image_label(db_filepath: str, session_id: int, filename: str, label: str):
     """
-    Update the classification of an image.
+    Update the label of an image.
     """
     with db_ops(db_filepath) as cursor:
-        cursor.execute('UPDATE image SET classification=?, processed=? WHERE name=? AND session_id=?',
-                       (classification, True, filename, session_id))
+        cursor.execute('UPDATE image SET label=?, processed=? WHERE name=? AND session_id=?',
+                       (label, True, filename, session_id))
 
 def update_session_processed_count(db_filepath: str, session_id: int):
     """
@@ -128,9 +128,9 @@ def get_imgs_from_session(db_filepath: str, session_id: int) -> list[str]:
     Get the images and its data from a session.
     """
     with db_ops(db_filepath) as cursor:
-        cursor.execute('SELECT img_id, name, session_id, processed, classification FROM image WHERE session_id=?', (session_id,))
+        cursor.execute('SELECT img_id, name, session_id, processed, label FROM image WHERE session_id=?', (session_id,))
         rows = cursor.fetchall()
-        img_data_list = [ { 'img_id': row[0], 'name': row[1], 'session_id': row[2], 'processed': row[3] > 0, 'classification': row[4]} for row in rows]
+        img_data_list = [ { 'img_id': row[0], 'name': row[1], 'session_id': row[2], 'processed': row[3] > 0, 'label': row[4]} for row in rows]
         return img_data_list
     
 def get_image_classes(db_filepath: str, session_id: int) -> list[str]:
@@ -138,7 +138,7 @@ def get_image_classes(db_filepath: str, session_id: int) -> list[str]:
     Get the classes of the images from a session.
     """
     with db_ops(db_filepath) as cursor:
-        cursor.execute('SELECT DISTINCT classification FROM image WHERE session_id=?', (session_id,))
+        cursor.execute('SELECT DISTINCT label FROM image WHERE session_id=?', (session_id,))
         rows = cursor.fetchall()
         class_list = [row[0] for row in rows]
         return class_list
@@ -173,7 +173,7 @@ def get_stats_from_session(db_filepath: str, session_id: int) -> dict:
     Get the stats from a session.
     """
     with db_ops(db_filepath) as cursor:
-        cursor.execute("select classification as img_class, sum(1) as img_amount  from image where image.session_id = ? group by classification;", (session_id,))
+        cursor.execute("select label as img_class, sum(1) as img_amount  from image where image.session_id = ? group by label;", (session_id,))
         rows = cursor.fetchall()
         r = []
         for row in rows:

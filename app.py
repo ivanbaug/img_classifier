@@ -103,13 +103,13 @@ def random_image64():
 
 @app.route('/tag_img_get_new', methods=['POST'])
 def tag_img_get_new():
-    # Update the tag/classification of the image
+    # Update the tag/label of the image
     content = request.get_json()
-    classification = content['imgType']
+    label = content['imgType']
     filename = content['filename']
     session_id = content['sessionId']
-    print(f"Tagging image {filename} as {classification}")
-    dbf.update_image_classification(db_file, session_id, filename, classification)
+    print(f"Tagging image {filename} as {label}")
+    dbf.update_image_label(db_file, session_id, filename, label)
     processed_count, total_count = dbf.update_session_processed_count(db_file, session_id)
 
     if (processed_count > 10 and processed_count % 10 == 0):
@@ -176,7 +176,7 @@ def copy_imgs_to_new_folder():
 
     for image in imgs_list:
         if image['processed']:
-            shutil.copy(IMAGE_FOLDER + '/' + image['name'], output_folder + '/' +  image['classification'] + '/' + image['name'])
+            shutil.copy(IMAGE_FOLDER + '/' + image['name'], output_folder + '/' +  image['label'] + '/' + image['name'])
 
     return jsonify({"success":True,  "info": "Done :)"})
 
