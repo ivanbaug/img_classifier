@@ -91,9 +91,9 @@ def random_image64():
     if not session_id:
         return jsonify({"success":False, "info": "No session ID received"})
 
-    filename = dbf.obtain_random_unprocessed_image(db_file, session_id)
+    filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
     if not filename:
-        return jsonify({"success":False, "info": "No unprocessed images left"})
+        return jsonify({"success":False, "info": "No unlabeled images left"})
 
     image = IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
@@ -110,15 +110,15 @@ def tag_img_get_new():
     session_id = content['sessionId']
     print(f"Tagging image {filename} as {label}")
     dbf.update_image_label(db_file, session_id, filename, label)
-    processed_count, total_count = dbf.update_session_processed_count(db_file, session_id)
+    labeled_count, total_count = dbf.update_session_labeled_count(db_file, session_id)
 
-    if (processed_count > 10 and processed_count % 10 == 0):
+    if (labeled_count > 10 and labeled_count % 10 == 0):
         # Space to process the model
         pass
 
     
     # Get a new image
-    filename = dbf.obtain_random_unprocessed_image(db_file, session_id)
+    filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
 
     if not filename:
         return jsonify({"success":False, "info": "No unprocessed images left"})
@@ -175,7 +175,7 @@ def copy_imgs_to_new_folder():
             os.makedirs(output_folder + '/' + img_class)
 
     for image in imgs_list:
-        if image['processed']:
+        if image['label']:
             shutil.copy(IMAGE_FOLDER + '/' + image['name'], output_folder + '/' +  image['label'] + '/' + image['name'])
 
     return jsonify({"success":True,  "info": "Done :)"})

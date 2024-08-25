@@ -27,7 +27,7 @@ def initialize_db(db_filepath: str) -> None:
     """
     with db_ops(db_filepath) as cursor:
         cursor.execute('CREATE TABLE IF NOT EXISTS session (session_id INTEGER PRIMARY KEY, '
-                       'completed BOOLEAN, last_updated TIMESTAMP, imgs_are_available BOOLEAN, img_total INT, img_processed INT)')
+                       'completed BOOLEAN, last_updated TIMESTAMP, imgs_are_available BOOLEAN, img_total INT, img_processed INT, img_labeled INT DEFAULT (0))')
         cursor.execute('CREATE TABLE IF NOT EXISTS image (img_id INTEGER PRIMARY KEY, name TEXT, '
                        'session_id INT, processed BOOLEAN, label TEXT, FOREIGN KEY(session_id) REFERENCES session(session_id))')
         logger.info('Database initialized')
@@ -57,21 +57,21 @@ def initialize_images_session(db_filepath: str, images: list[str], session_id: i
                            'VALUES (?, ?, ?, ?)', img_array)
         logger.info(f'Images initialized for session: {session_id}')
 
-def obtain_random_unprocessed_image(db_filepath: str, session_id: int) -> str:
+def obtain_random_unlabeled_image(db_filepath: str, session_id: int) -> str:
     """
-    Obtain a random unprocessed image.
+    Obtain a random unlabeled image.
     """
     query = '''SELECT name FROM image WHERE img_id IN 
-            (SELECT img_id FROM image WHERE session_id=? AND processed=? ORDER BY RANDOM() LIMIT 1)'''
+            (SELECT img_id FROM image WHERE session_id=? AND coalesce(label, '') = '' ORDER BY RANDOM() LIMIT 1)'''
     with db_ops(db_filepath) as cursor:
-        cursor.execute(query, (session_id, False))
+        cursor.execute(query, (session_id,))
         image = cursor.fetchone()
         print(image)
         if image is not None:
             logger.info(f'Random image obtained: {image[0]}')
             return image[0]
         else:
-            logger.info('No unprocessed images found')
+            logger.info('No unlabeled images found')
             return ''
         
 def update_image_label(db_filepath: str, session_id: int, filename: str, label: str):
@@ -79,20 +79,20 @@ def update_image_label(db_filepath: str, session_id: int, filename: str, label: 
     Update the label of an image.
     """
     with db_ops(db_filepath) as cursor:
-        cursor.execute('UPDATE image SET label=?, processed=? WHERE name=? AND session_id=?',
-                       (label, True, filename, session_id))
+        cursor.execute('UPDATE image SET label=? WHERE name=? AND session_id=?',
+                       (label, filename, session_id))
 
-def update_session_processed_count(db_filepath: str, session_id: int):
+def update_session_labeled_count(db_filepath: str, session_id: int):
     """
-    Update the count of processed images in a session.
+    Update the count of labeled images in a session.
     """
     with db_ops(db_filepath) as cursor:
-        cursor.execute('SELECT COUNT(*) FROM image WHERE session_id=? AND processed=?', (session_id, True))
-        processed_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM image WHERE session_id=? AND not coalesce(label, '') = ''", (session_id,))
+        labeled_count = cursor.fetchone()[0]
         cursor.execute('SELECT COUNT(*) FROM image WHERE session_id=?', (session_id))
         total_count = cursor.fetchone()[0]
-        cursor.execute('UPDATE session SET img_processed=?, img_total=? WHERE session_id=?', (processed_count, total_count, session_id))
-        return processed_count, total_count
+        cursor.execute('UPDATE session SET img_labeled=?, img_total=? WHERE session_id=?', (labeled_count, total_count, session_id))
+        return labeled_count, total_count
 
 def get_sessions(db_filepath: str, **kwargs) -> list[dict]:
     """
@@ -110,7 +110,7 @@ def get_sessions(db_filepath: str, **kwargs) -> list[dict]:
         rows = cursor.fetchall()
         session_list = []
         for row in rows:
-            session_list.append( { 'session_id':row[0], 'completed': row[1] > 0, 'last_updated': row[2], 'imgs_are_available': row[3] > 0, 'img_total': row[4], 'img_processed': row[5]})
+            session_list.append( { 'session_id':row[0], 'completed': row[1] > 0, 'last_updated': row[2], 'imgs_are_available': row[3] > 0, 'img_total': row[4], 'img_processed': row[5], 'img_labeled': row[6]})
         return session_list
     
 def get_img_names_from_session(db_filepath: str, session_id: int) -> list[str]:
@@ -143,13 +143,13 @@ def get_image_classes(db_filepath: str, session_id: int) -> list[str]:
         class_list = [row[0] for row in rows]
         return class_list
     
-def new_session(db_filepath: str, img_total: int, img_processed: int, img_available: bool = False) -> int:
+def new_session(db_filepath: str, img_total: int, img_processed: int, img_available: bool = False, img_labeled: int = 0) -> int:
     """
     Create a new session in the database.
     """
     with db_ops(db_filepath) as cursor:
-        cursor.execute('INSERT INTO session(completed, last_updated, imgs_are_available, img_total, img_processed) '
-                       'VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?)', (False, img_available, img_total, img_processed))
+        cursor.execute('INSERT INTO session(completed, last_updated, imgs_are_available, img_total, img_processed, img_labeled) '
+                       'VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?)', (False, img_available, img_total, img_processed, img_labeled))
         session_id = cursor.lastrowid
         # logger.info(f'New session created: {session_id}')
     return session_id
