@@ -89,9 +89,11 @@ def update_session_labeled_count(db_filepath: str, session_id: int):
     with db_ops(db_filepath) as cursor:
         cursor.execute("SELECT COUNT(*) FROM image WHERE session_id=? AND not coalesce(label, '') = ''", (session_id,))
         labeled_count = cursor.fetchone()[0]
-        cursor.execute('SELECT COUNT(*) FROM image WHERE session_id=?', (session_id))
+        cursor.execute('SELECT COUNT(*) FROM image WHERE session_id=? AND processed = true', (session_id,))
+        processed_count = cursor.fetchone()[0]
+        cursor.execute('SELECT COUNT(*) FROM image WHERE session_id=?', (session_id,))
         total_count = cursor.fetchone()[0]
-        cursor.execute('UPDATE session SET img_labeled=?, img_total=? WHERE session_id=?', (labeled_count, total_count, session_id))
+        cursor.execute('UPDATE session SET img_labeled=?, img_total=?, img_processed=? WHERE session_id=?', (labeled_count, total_count, processed_count, session_id))
         return labeled_count, total_count
 
 def get_sessions(db_filepath: str, **kwargs) -> list[dict]:

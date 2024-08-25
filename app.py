@@ -42,6 +42,7 @@ def initialize_images_in_db():
     sessions = dbf.get_sessions(db_file)
 
     for session in sessions:
+        dbf.update_session_labeled_count(db_file, session['session_id'])
         simgs = dbf.get_img_names_from_session(db_file, session['session_id'])
         simgs_set = set(simgs)
 
@@ -55,9 +56,11 @@ def initialize_images_in_db():
                 dbf.set_session_imgs_available(db_file, session['session_id'])
                 continue
 
-        qty_diff = qty_session_imgs - qty_imgs
+        qty_diff = qty_imgs - qty_session_imgs
         if qty_diff > 0:
-            diff_imgs = simgs_set.difference(images_set)
+            # There are more images in the folder than in the session in db
+            diff_imgs = images_set.difference(simgs_set)
+
             if qty_diff != len(diff_imgs):
                 # All images in the database are not in the folder
                 continue
@@ -65,10 +68,12 @@ def initialize_images_in_db():
             dbf.initialize_images_session(db_file, list(diff_imgs),session['session_id'])
             session['imgs_are_available'] = True
             dbf.set_session_imgs_available(db_file, session['session_id'])
+            dbf.update_session_labeled_count(db_file, session['session_id'])
             continue
         else:
             # Some images in the database are not in the folder
             continue
+        
     
     if any([session['imgs_are_available'] for session in sessions]):
         # At least one session exists with all images available
