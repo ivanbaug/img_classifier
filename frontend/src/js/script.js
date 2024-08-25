@@ -5,7 +5,7 @@ let sessionId = getQueryVariable("session");
 let firstLoad = true;
 const keepBtn = document.getElementById('keepBtn');
 const workBtn = document.getElementById('workBtn');
-const memeBtn = document.getElementById('memeBtn');
+// const memeBtn = document.getElementById('memeBtn');
 const screenshotBtn = document.getElementById('screenshotBtn');
 
 const mainMenuBtn = document.getElementById('mainMenuBtn');
@@ -19,9 +19,9 @@ keepBtn.addEventListener('click', function() {
     sendImgTypeGetNewImg('keep');
 });
 
-memeBtn.addEventListener('click', function() {
-    sendImgTypeGetNewImg('meme');
-});
+// memeBtn.addEventListener('click', function() {
+//     sendImgTypeGetNewImg('meme');
+// });
 
 screenshotBtn.addEventListener('click', function() {
     sendImgTypeGetNewImg('screenshot');

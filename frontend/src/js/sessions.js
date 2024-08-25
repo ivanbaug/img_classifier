@@ -22,7 +22,7 @@ async function getAvailableSessions() {
 
         res.data.forEach(session => {
             const btn = document.createElement('button');
-            btn.textContent = `Session ${session.session_id.toString()} - (${session.img_processed}/${session.img_total})`;
+            btn.textContent = `Session ${session.session_id.toString()} - (${session.img_labeled}/${session.img_total})`;
             btn.id = `btn-${session.session_id.toString()}`;
             btn.addEventListener('click', function() {
                 document.location.href = `classi.html?session=${session.session_id.toString()}`;
