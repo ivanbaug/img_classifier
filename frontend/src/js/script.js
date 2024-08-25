@@ -63,28 +63,7 @@ async function fetchImage() {
         imgElement.src = `data:${contentType};base64,` + data.image;
 
         // If stats received, display them
-        if (data.stats) {
-            const statsElement = document.getElementById('listStats');
-            const totalStatsElement = document.getElementById('totalStats');
-            const total = data.stats.reduce((a, b) => a + b.amount, 0);
-            console.log(total);
-            const objRemaining = data.stats.find(obj => obj.class === '');
-            const processed = total - objRemaining.amount;
-
-            totalStatsElement.innerHTML = `Total: ${total} Processed: ${processed} Remaining: ${objRemaining.amount}`;
-
-            // Display the stats as a ul list
-            statsElement.innerHTML = '';
-            data.stats.forEach(stat => {
-                // skip if class is empty
-                if (stat.class == '') {
-                    return;
-                }
-                const li = document.createElement('li');
-                li.innerHTML = `${stat.class}: ${stat.amount}`;
-                statsElement.appendChild(li);
-            });            
-        }
+        displayStats(data);
 
     } catch (error) {
         console.error('Error fetching image:', error);
@@ -119,30 +98,8 @@ async function sendImgTypeGetNewImg(imgType) {
             // Display the image
             const imgElement = document.getElementById('imageElement');
             imgElement.src = `data:${contentType};base64,` + data.image;
-
-            // If stats received, display them
-            if (data.stats) {
-                const statsElement = document.getElementById('listStats');
-                const totalStatsElement = document.getElementById('totalStats');
-                const total = data.stats.reduce((a, b) => a + b.amount, 0);
-                console.log(total);
-                const objRemaining = data.stats.find(obj => obj.class === '');
-                const processed = total - objRemaining.amount;
-
-                totalStatsElement.innerHTML = `Total: ${total} Processed: ${processed} Remaining: ${objRemaining.amount}`;
-
-                // Display the stats as a ul list
-                statsElement.innerHTML = '';
-                data.stats.forEach(stat => {
-                    // skip if class is empty
-                    if (stat.class == '') {
-                        return;
-                    }
-                    const li = document.createElement('li');
-                    li.innerHTML = `${stat.class}: ${stat.amount}`;
-                    statsElement.appendChild(li);
-                });            
-            }
+            // Display the stats
+            displayStats(data);
         } else {
             console.log(data.info);
             
@@ -211,6 +168,37 @@ function getContentType(fileExt) {
             contentType = 'image/jpeg';
     }
     return contentType;
+}
+
+function displayStats(data){
+    // If stats received, display them
+    if (data.stats) {
+        const statsElement = document.getElementById('listStats');
+        const totalStatsElement = document.getElementById('totalStats');
+        const total = data.stats.reduce((a, b) => a + b.amount, 0);
+        console.log(total);
+        const objRemaining = data.stats.find(obj => obj.class === '');
+        const labeled = total - objRemaining.amount;
+
+        totalStatsElement.innerHTML = `Total: ${total} Labeled: ${labeled} Remaining: ${objRemaining.amount}`;
+
+        // Display the stats as a ul list
+        statsElement.innerHTML = '';
+        data.stats.forEach(stat => {
+            // skip if class is empty
+            if (stat.class == '') {
+                return;
+            }
+            const li = document.createElement('li');
+            li.innerHTML = `${stat.class}: ${stat.amount}`;
+            statsElement.appendChild(li);
+        });            
+    } else {
+        const statsElement = document.getElementById('listStats');
+        const totalStatsElement = document.getElementById('totalStats');
+        totalStatsElement.innerHTML = '';
+        statsElement.innerHTML = '';
+    }
 }
 
 function getQueryVariable(variable) {
