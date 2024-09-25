@@ -1,6 +1,6 @@
 import sqlite3
 from contextlib import contextmanager
-from settings.config import log_config
+from settings.config import log_config, IMAGE_FOLDER
 
 import logging
 from logging import config as logging_config
@@ -182,3 +182,37 @@ def get_stats_from_session(db_filepath: str, session_id: int) -> dict:
             r.append({'class': row[0], 'amount': row[1]})
         return r
 
+
+## For use in image classifier
+def get_all_labeled_images(db_filepath: str, session_id: int) -> list[dict]:
+    """
+    Get all labeled images from a session.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute("select name as filename, label from image where session_id = ? and label != '';", (session_id,))
+        rows = cursor.fetchall()
+        data_list = []
+        for row in rows:
+            data_list.append({'filename': IMAGE_FOLDER+'/'+row[0], 'class': row[1]})
+        return data_list
+    
+    
+def get_unprocessed_labeled_images(db_filepath: str, session_id: int) -> list[dict]:
+    """
+    Get only unprocessed labeled images from a session.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute("select name as filename, label from image where session_id = ? and label != '' and processed = 0;", (session_id,))
+        rows = cursor.fetchall()
+        data_list = []
+        for row in rows:
+            data_list.append({'filename': IMAGE_FOLDER+'/'+row[0], 'class': row[1]})
+        return data_list
+    
+
+def set_images_processed(db_filepath: str, session_id: int):    
+    """
+    Set all labeled images in a session as processed.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute("UPDATE image SET processed=? WHERE session_id=? and label != '';", (True, session_id))

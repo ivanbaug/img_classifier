@@ -11,6 +11,7 @@ from flask_cors import CORS, cross_origin
 
 from settings.config import log_config, db_file, IMAGE_FOLDER, SESSION_OUTPUT_FOLDER
 import db.db_funcs as dbf
+import classifier.classifier as clf
 
 # Logging setup
 import logging
@@ -104,7 +105,11 @@ def random_image64():
     encoded_string = get_response_scaled_image(image)
 
     stats = dbf.get_stats_from_session(db_file, session_id)
-    return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats})
+
+    predicted = clf.predict_image(image, session_id)
+
+
+    return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted":predicted})
 
 @app.route('/tag_img_get_new', methods=['POST'])
 def tag_img_get_new():
@@ -190,6 +195,20 @@ def copy_imgs_to_new_folder():
 def get_available_sessions():
     sessions = dbf.get_sessions(db_file, imgs_are_available=True)
     return jsonify({"success":True, "data":sessions, "info": "OK"})
+
+
+@app.route('/train_model', methods=['POST'])
+def train_model():
+    # session_id = request.args.get('sessionId')
+    # full_train = request.args.get('fullTrain')
+    content = request.get_json()
+    session_id = content['sessionId']
+    full_train = content['fullTrain']
+    if not session_id:
+        return jsonify({"success":False, "info": "No session ID received"})
+
+    clf.train_model_by_session(db_file, session_id, full_train=full_train)
+    return jsonify({"success":True, "info": "OK"})
 
 if __name__ == '__main__':
     initialize_images_in_db()

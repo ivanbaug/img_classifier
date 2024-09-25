@@ -15,6 +15,7 @@ db_file = VOLUME_PATH + 'db.sqlite3'
 
 IMAGE_FOLDER = VOLUME_PATH + 'static/images'
 SESSION_OUTPUT_FOLDER = VOLUME_PATH + 'static/output'
+CLS_MODEL_FOLDER = VOLUME_PATH + 'classifier/models'
 
 # Nice guide to logging config with dictionary
 # https://coderzcolumn.com/tutorials/python/logging-config-simple-guide-to-configure-loggers-from-dictionary-and-config-files-in-python
