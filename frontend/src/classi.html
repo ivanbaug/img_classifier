@@ -16,13 +16,24 @@
             <!-- <img src="{{ url_for('static', filename='images/' + image_name) }}" alt="Image" style="max-width:100%; height:auto;"> -->
             <div class="py-8 flex justify-around w-1/2">
                 <!-- <button id="memeBtn" class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 w-36 rounded">Meme</button> -->
-                <button id="screenshotBtn" class="bg-purple-700 hover:bg-purple-900 text-white font-bold py-2 px-4 w-36 rounded">Screenshot</button>
-                <button id="keepBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 w-36 rounded">Keep</button>
-                <button id="workBtn" class="bg-lime-600 hover:bg-lime-800 text-white font-bold py-2 px-4 w-36 rounded">Work</button>
+                 <div class="flex flex-col items-center justify-end">
+                    <div id="screenshotPredicted">👇</div>
+                     <button id="screenshotBtn" class="bg-purple-700 hover:bg-purple-900 text-white font-bold py-2 px-4 w-36 rounded">Screenshot</button>
+                 </div>
+                 <div class="flex flex-col items-center justify-end">
+                    <div id="keepPredicted">👇</div>
+                    <button id="keepBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 w-36 rounded">Keep</button>
+                </div>
+                <div class="flex flex-col items-center justify-end">
+                    <div id="workPredicted">👇</div>
+                    <button id="workBtn" class="bg-lime-600 hover:bg-lime-800 text-white font-bold py-2 px-4 w-36 rounded">Work</button>
+                </div>
             </div>
             <div class="py-8 flex justify-between  w-3/4">
                 <button id="mainMenuBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 w-36 rounded">Main Menu</button>
                 <button id="savePrcBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 w-36 rounded">Move Imgs Dir</button>
+                <button id="trainFullBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 w-36 rounded">Train Full</button>
+                <button id="trainFineTuneBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 w-36 rounded">FineTune</button>
             </div>
             <div class="flex w-3/4 justify-start">
                 <div class="text-slate-200 " >
@@ -34,6 +45,9 @@
             </div>
 
         </div>
+    </div>
+    <div id="spinner" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="loader border-t-4 border-blue-500 rounded-full w-16 h-16 animate-spin"></div>
     </div>
 
     <script src="js/script.js"></script>

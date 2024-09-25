@@ -11,6 +11,13 @@ const screenshotBtn = document.getElementById('screenshotBtn');
 const mainMenuBtn = document.getElementById('mainMenuBtn');
 const savePrcBtn = document.getElementById('savePrcBtn');
 
+const trainFullBtn = document.getElementById('trainFullBtn');
+const trainFineTuneBtn = document.getElementById('trainFineTuneBtn');
+
+const screenshotEmoji = document.getElementById('screenshotPredicted');
+const workEmoji = document.getElementById('workPredicted');
+const keepEmoji = document.getElementById('keepPredicted');
+
 
 const currentImage = document.getElementById('currentImage');
 let currentFilename = '';
@@ -39,6 +46,49 @@ savePrcBtn.addEventListener('click', function() {
     copyImgsToNewFolder();
 });
 
+
+trainFullBtn.addEventListener('click', function() {
+    trainModel(true);
+});
+
+trainFineTuneBtn.addEventListener('click', function() {
+    trainModel(false);
+});
+
+async function trainModel(fullTrain) {
+    showSpinner();
+    try {
+        const postData = {
+            sessionId: sessionId,
+            fullTrain: fullTrain
+        };
+        const response = await fetch(API_URL + "/train_model", {
+            method: "POST",
+            url: API_URL,
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(postData)
+        });
+
+        const statusCode = response.status;
+        const data = await response.json();
+        console.log(data);
+
+        if (statusCode === 200) {            
+            window.alert(data.info);
+        } else {
+            console.log(data.info);
+            window.alert(data.info);
+        }
+
+    } catch (error) {
+        console.log(data.info);
+        console.error('Error training model:', error);
+    } finally {
+        hideSpinner();
+    }
+    
+} 
+
 async function fetchImage() {
     try {
         const response = await fetch(API_URL + "/random_image64?session=" + sessionId , {
@@ -64,6 +114,27 @@ async function fetchImage() {
 
         // If stats received, display them
         displayStats(data);
+
+        // Display the predicted class
+        if (data.predicted) {
+            keepEmoji.classList.add('hidden');
+            workEmoji.classList.add('hidden');
+            screenshotEmoji.classList.add('hidden');
+
+            switch (data.predicted) {
+                case 'keep':
+                    keepEmoji.classList.remove('hidden');
+                    break;
+                case 'work':
+                    workEmoji.classList.remove('hidden');
+                    break;
+                case 'screenshot':
+                    screenshotEmoji.classList.remove('hidden');
+                    break;
+                default:
+                    break;
+            }
+        }
 
     } catch (error) {
         console.error('Error fetching image:', error);
@@ -218,4 +289,17 @@ function getQueryVariable(variable) {
 if (firstLoad) {
     fetchImage();
     firstLoad = false;
+}
+
+const spinner = document.getElementById('spinner');
+
+function showSpinner() {
+    console.log('show spinner');
+    
+    spinner.classList.remove('hidden');
+}
+
+function hideSpinner() {
+    console.log('hide spinner');
+    spinner.classList.add('hidden');
 }
