@@ -2,7 +2,7 @@ import sqlite3
 from contextlib import contextmanager
 from settings.config import log_config, IMAGE_FOLDER
 
-import logging
+import logging, json
 from logging import config as logging_config
 logging_config.dictConfig(log_config)
 logger = logging.getLogger()
@@ -27,9 +27,11 @@ def initialize_db(db_filepath: str) -> None:
     """
     with db_ops(db_filepath) as cursor:
         cursor.execute('CREATE TABLE IF NOT EXISTS session (session_id INTEGER PRIMARY KEY, '
-                       'completed BOOLEAN, last_updated TIMESTAMP, imgs_are_available BOOLEAN, img_total INT, img_processed INT, img_labeled INT DEFAULT (0))')
+                       'completed BOOLEAN, last_updated TIMESTAMP, imgs_are_available BOOLEAN, img_total INT, img_processed INT, img_labeled INT DEFAULT (0), label_map TEXT)')
         cursor.execute('CREATE TABLE IF NOT EXISTS image (img_id INTEGER PRIMARY KEY, name TEXT, '
                        'session_id INT, processed BOOLEAN, label TEXT, FOREIGN KEY(session_id) REFERENCES session(session_id))')
+        cursor.execute('CREATE TABLE IF NOT EXISTS prediction (pred_id INTEGER PRIMARY KEY, name TEXT, '
+                       'label TEXT, processed BOOLEAN, session_id INT, FOREIGN KEY(session_id) REFERENCES session(session_id))')
         logger.info('Database initialized')
 
 # TODO: Remove if not used
@@ -73,6 +75,16 @@ def obtain_random_unlabeled_image(db_filepath: str, session_id: int) -> str:
         else:
             logger.info('No unlabeled images found')
             return ''
+        
+def obtain_unlabeled_images_from_session(db_filepath: str, session_id: int) -> list[str]:
+    """
+    Obtain all unlabeled images from a session.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('SELECT name FROM image WHERE session_id=? AND coalesce(label, "") = ""', (session_id,))
+        rows = cursor.fetchall()
+        img_list = [row[0] for row in rows]
+        return img_list
         
 def update_image_label(db_filepath: str, session_id: int, filename: str, label: str):
     """
@@ -216,3 +228,46 @@ def set_images_processed(db_filepath: str, session_id: int):
     """
     with db_ops(db_filepath) as cursor:
         cursor.execute("UPDATE image SET processed=? WHERE session_id=? and label != '';", (True, session_id))
+
+def save_label_map(db_filepath: str, session_id: int, label_map: dict[int, str]):
+    """
+    Save the label map in the database.
+    """
+    json_label_map = json.dumps(label_map)
+    with db_ops(db_filepath) as cursor:
+        cursor.execute("UPDATE session SET label_map=? WHERE session_id=?", (json_label_map, session_id))
+
+def get_label_map(db_filepath: str, session_id: int) -> dict[int, str]:
+    """
+    Get the label map from the database.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute("SELECT label_map FROM session WHERE session_id=?", (session_id,))
+        json_label_map = cursor.fetchone()[0]
+        label_map = json.loads(json_label_map)
+        return label_map
+    
+def add_prediction(db_filepath: str, filename: str, label: str, session_id: int):
+    """
+    Add a new prediction to the database.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('INSERT INTO prediction(name, label, session_id, processed) VALUES (?, ?, ?, ?)', (filename, label, session_id, False))
+
+def set_prediction_processed(db_filepath: str, filename: str, session_id: int):
+    """
+    Set a prediction as processed.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('UPDATE prediction SET processed=? WHERE name=? AND session_id=?', (True, filename, session_id))
+
+def get_unprocessed_prediction(db_filepath: str, session_id: int) -> list[dict]:
+    """
+    Get single unprocessed prediction from the database.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('SELECT name, label FROM prediction WHERE session_id=? AND processed=? ORDER BY label LIMIT 1', (session_id, False))
+        row = cursor.fetchone()
+        if row is not None:
+            return {'filename': row[0], 'class': row[1]}
+        return None
