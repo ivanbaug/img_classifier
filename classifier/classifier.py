@@ -108,6 +108,8 @@ def train_model_by_session(db_file, session_id, full_train=False):
 
     
     class_names, number_of_classes, map_label_to_index, map_index_to_label, map_label_to_categorical = extract_labels_and_mappings(data_list)
+
+    dbf.save_label_map(db_file, session_id, map_index_to_label)
     
     for item in data_list:
         item["label"] = map_label_to_categorical[item["class"]]
@@ -162,8 +164,44 @@ def predict_image(image_path, session_id):
     prediction = model.predict(image)
 
     #get labels and mappings
-    data_list = dbf.get_all_labeled_images(db_file, session_id)
-    class_names, number_of_classes, map_label_to_index, map_index_to_label, map_label_to_categorical = extract_labels_and_mappings(data_list)
+    map_index_to_label = dbf.get_label_map(db_file, session_id) # try to get the label map from the database
+    if not map_index_to_label:
+        data_list = dbf.get_all_labeled_images(db_file, session_id)
+        class_names, number_of_classes, map_label_to_index, map_index_to_label, map_label_to_categorical = extract_labels_and_mappings(data_list)
 
 
     return map_index_to_label[np.argmax(prediction)]
+
+def predict_images(session_id, image_amount):
+    """
+    Predict the images with the given session id.
+    """
+
+    image_list = dbf.obtain_unlabeled_images_from_session(db_file, session_id)
+
+    map_index_to_label = dbf.get_label_map(db_file, session_id) # try to get the label map from the database
+    if not map_index_to_label:
+        data_list = dbf.get_all_labeled_images(db_file, session_id)
+        class_names, number_of_classes, map_label_to_index, map_index_to_label, map_label_to_categorical = extract_labels_and_mappings(data_list)
+
+    model_filepath = CLS_MODEL_FOLDER + f'/model_{session_id}.h5'
+    if not os.path.exists(model_filepath):
+        logger.error(f"Model file not found: {model_filepath}")
+        return None
+
+    model = tf.keras.models.load_model(model_filepath)
+    # predictions = []
+    for image_name in image_list[:image_amount]:
+        image_path = IMAGE_FOLDER + '/' + image_name
+        image = tf.io.read_file(image_path)
+        image = tf.image.decode_image(image, channels=3, expand_animations = False)
+        image = tf.image.resize(image, [256, 256])
+        image = tf.expand_dims(image, axis=0)
+        image = image / 255.0
+        prediction = model.predict(image)
+
+        dbf.add_prediction(db_file, image_name, map_index_to_label[np.argmax(prediction)], session_id)
+
+        # predictions.append(map_index_to_label[np.argmax(prediction)])
+    
+    # return predictions
