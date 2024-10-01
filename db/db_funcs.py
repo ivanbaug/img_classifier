@@ -244,8 +244,14 @@ def get_label_map(db_filepath: str, session_id: int) -> dict[int, str]:
     with db_ops(db_filepath) as cursor:
         cursor.execute("SELECT label_map FROM session WHERE session_id=?", (session_id,))
         json_label_map = cursor.fetchone()[0]
-        label_map = json.loads(json_label_map)
+        label_map = json.loads(json_label_map, object_hook=jsonKeys2int)
         return label_map
+    
+def jsonKeys2int(x):
+    # Should only be used when we are sure that the keys are integers
+    if isinstance(x, dict):
+        return {int(k):v for k,v in x.items()}
+    return x
     
 def add_prediction(db_filepath: str, filename: str, label: str, session_id: int):
     """
@@ -261,13 +267,30 @@ def set_prediction_processed(db_filepath: str, filename: str, session_id: int):
     with db_ops(db_filepath) as cursor:
         cursor.execute('UPDATE prediction SET processed=? WHERE name=? AND session_id=?', (True, filename, session_id))
 
-def get_unprocessed_prediction(db_filepath: str, session_id: int) -> list[dict]:
+def get_unprocessed_prediction(db_filepath: str, session_id: int) -> tuple[str, str]:
     """
-    Get single unprocessed prediction from the database.
+    Get single unprocessed prediction from the database. The prediction is ordered by label. The group with least labels come first.
     """
+
+    query = '''
+            WITH unprocessed_count AS (
+                SELECT label, COUNT(*) AS unprocessed_total
+                FROM prediction
+                WHERE processed = 0
+                GROUP BY label
+                HAVING unprocessed_total > 0
+                ORDER BY unprocessed_total ASC
+                LIMIT 1
+            )
+            SELECT name, label
+            FROM prediction
+            WHERE session_id=? AND processed=?
+            AND label = (SELECT label FROM unprocessed_count)
+            LIMIT 1
+            '''
     with db_ops(db_filepath) as cursor:
-        cursor.execute('SELECT name, label FROM prediction WHERE session_id=? AND processed=? ORDER BY label LIMIT 1', (session_id, False))
+        cursor.execute(query, (session_id, False))
         row = cursor.fetchone()
         if row is not None:
-            return {'filename': row[0], 'class': row[1]}
-        return None
+            return row[0], row[1] # filename, label
+        return None, None
