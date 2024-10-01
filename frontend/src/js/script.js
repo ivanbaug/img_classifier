@@ -116,32 +116,43 @@ async function fetchImage() {
         displayStats(data);
 
         // Display the predicted class
-        if (data.predicted) {
-            keepEmoji.classList.add('hidden');
-            workEmoji.classList.add('hidden');
-            screenshotEmoji.classList.add('hidden');
+        displayPredicted(data);
 
-            switch (data.predicted) {
-                case 'keep':
-                    keepEmoji.classList.remove('hidden');
-                    break;
-                case 'work':
-                    workEmoji.classList.remove('hidden');
-                    break;
-                case 'screenshot':
-                    screenshotEmoji.classList.remove('hidden');
-                    break;
-                default:
-                    break;
-            }
-        }
 
     } catch (error) {
         console.error('Error fetching image:', error);
     }
 }
 
+function displayPredicted (data) {
+    // Display the predicted class
+    if (data.predicted) {
+        keepEmoji.classList.add('hidden');
+        workEmoji.classList.add('hidden');
+        screenshotEmoji.classList.add('hidden');
+
+        switch (data.predicted) {
+            case 'keep':
+                keepEmoji.classList.remove('hidden');
+                break;
+            case 'work':
+                workEmoji.classList.remove('hidden');
+                break;
+            case 'screenshot':
+                screenshotEmoji.classList.remove('hidden');
+                break;
+            default:
+                break;
+        }
+    } else {
+        keepEmoji.classList.add('hidden');
+        workEmoji.classList.add('hidden');
+        screenshotEmoji.classList.add('hidden');
+    }
+}
+
 async function sendImgTypeGetNewImg(imgType) {
+    showSpinner();
     try {
         const postData = {
             filename: currentFilename,
@@ -171,14 +182,20 @@ async function sendImgTypeGetNewImg(imgType) {
             imgElement.src = `data:${contentType};base64,` + data.image;
             // Display the stats
             displayStats(data);
+
+            // Display the predicted class
+            displayPredicted(data);
         } else {
             console.log(data.info);
             
         }
+        hideSpinner();
+
 
     } catch (error) {
         console.log(data.info);
         console.error('Error fetching image:', error);
+        hideSpinner();
     }
 }
 
