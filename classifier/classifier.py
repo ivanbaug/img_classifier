@@ -106,6 +106,10 @@ def train_model_by_session(db_file, session_id, full_train=False):
     else:
         data_list = dbf.get_unprocessed_labeled_images(db_file, session_id)
 
+    if (len(data_list) < batch_size+1):
+        logger.error(f"Too few images to train: {len(data_list)}")
+        raise ValueError("Too few labeled images to train")
+
     
     class_names, number_of_classes, map_label_to_index, map_index_to_label, map_label_to_categorical = extract_labels_and_mappings(data_list)
 

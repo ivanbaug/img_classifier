@@ -222,7 +222,10 @@ def train_model():
     if not session_id:
         return jsonify({"success":False, "info": "No session ID received"})
 
-    clf.train_model_by_session(db_file, session_id, full_train=full_train)
+    try:
+        clf.train_model_by_session(db_file, session_id, full_train=full_train)
+    except ValueError as e:
+        return jsonify({"success":False, "info": str(e)})
     return jsonify({"success":True, "info": "OK"})
 
 if __name__ == '__main__':
