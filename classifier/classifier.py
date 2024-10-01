@@ -172,12 +172,16 @@ def predict_image(image_path, session_id):
 
     return map_index_to_label[np.argmax(prediction)]
 
-def predict_images(session_id, image_amount):
+def predict_images(session_id, image_amount) -> bool:
     """
     Predict the images with the given session id.
+    Return True if there are images to predict, False otherwise.
     """
 
     image_list = dbf.obtain_unlabeled_images_from_session(db_file, session_id)
+    if not image_list:
+        return False
+
 
     map_index_to_label = dbf.get_label_map(db_file, session_id) # try to get the label map from the database
     if not map_index_to_label:
@@ -190,7 +194,6 @@ def predict_images(session_id, image_amount):
         return None
 
     model = tf.keras.models.load_model(model_filepath)
-    # predictions = []
     for image_name in image_list[:image_amount]:
         image_path = IMAGE_FOLDER + '/' + image_name
         image = tf.io.read_file(image_path)
@@ -202,6 +205,5 @@ def predict_images(session_id, image_amount):
 
         dbf.add_prediction(db_file, image_name, map_index_to_label[np.argmax(prediction)], session_id)
 
-        # predictions.append(map_index_to_label[np.argmax(prediction)])
     
-    # return predictions
+    return True
