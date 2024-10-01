@@ -155,6 +155,10 @@ def train_model_by_session(db_file, session_id, full_train=False):
 
     save_model(model, session_id)
 
+    # Finally set images in the session as processed
+    dbf.set_images_processed(db_file, session_id)    
+
+
 def predict_image(image_path, session_id):
     """
     Predict the image with the given session id.
