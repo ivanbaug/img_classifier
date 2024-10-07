@@ -41,7 +41,7 @@ workBtn.addEventListener('click', function() {
 });
 
 mainMenuBtn.addEventListener('click', function() {
-    document.location.href = 'index.html';
+    document.location.href = '/';
 });
 
 savePrcBtn.addEventListener('click', function() {
