@@ -1,5 +1,7 @@
-// import { API_URL } from './config.js';
-const API_URL = 'http://127.0.0.1:5000';
+if (API_URL == null){
+    var API_URL = 'http://127.0.0.1:5000';
+}
+
 let sessionId = getQueryVariable("session");
 
 let firstLoad = true;
