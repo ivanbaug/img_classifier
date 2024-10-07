@@ -90,6 +90,10 @@ def index():
     # return send_from_directory(app.static_folder, 'index.html')
     # return redirect(url_for('show_image', image_id=0))
 
+@app.route('/classify')
+def classify(): 
+    return render_template('classi.html', title='Image Viewer', header='Image Classifier')
+
     
 @app.route('/random_image64')
 # @cross_origin()
