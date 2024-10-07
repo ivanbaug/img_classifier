@@ -1,1 +1,0 @@
-CREATE TABLE IF NOT EXISTS image (name TEXT, session INT, processed BOOLEAN, classification TEXT)
