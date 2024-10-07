@@ -1,9 +1,5 @@
-
-
 if (API_URL == null){
     var API_URL = 'http://127.0.0.1:5000';
-} else {
-    console.log("API_URL is already defined ", API_URL);
 }
 
 let firstLoad = true;
@@ -30,7 +26,7 @@ async function getAvailableSessions() {
             btn.textContent = `Session ${session.session_id.toString()} - (${session.img_labeled}/${session.img_total})`;
             btn.id = `btn-${session.session_id.toString()}`;
             btn.addEventListener('click', function() {
-                document.location.href = `classi.html?session=${session.session_id.toString()}`;
+                document.location.href = `classify?session=${session.session_id.toString()}`;
             });
             btn.classList.add('bg-blue-500', 'hover:bg-blue-700', 'text-white', 'font-bold', 'py-2', 'px-4', 'w-36', 'rounded');
             btnContainer.appendChild(btn);
