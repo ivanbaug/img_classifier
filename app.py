@@ -85,8 +85,10 @@ def initialize_images_in_db():
     return
 
 @app.route('/')
-def index():
-    return redirect(url_for('show_image', image_id=0))
+def index(): 
+    return render_template('index.html', title='Image Viewer', header='Image Classifier - Sessions', subheader='Pick a session or create a new one')
+    # return send_from_directory(app.static_folder, 'index.html')
+    # return redirect(url_for('show_image', image_id=0))
 
     
 @app.route('/random_image64')
