@@ -55,5 +55,9 @@ After training the model the UI will recommend the labels for the following imag
 
 Finally, by clicking on `Move Imgs Dir` the labelled images are moved to the output folders grouped by label.
 
+### Screenshots
+![Session Selector](/readme_imgs/c2.jpg)
+![Classifier](/readme_imgs/c1.jpg)
+
 
 Note: I am aware that there are open source and freemium alternatives that can sort and label images on a larger scale like immich, and also data storage costs often go down. But this project the way I imagine an image classifier for not a great amount of images, just the ones I have.
