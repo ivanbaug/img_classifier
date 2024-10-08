@@ -204,6 +204,10 @@ def copy_imgs_to_new_folder():
 
     for image in imgs_list:
         if image['label']:
+            # check if metadata file exists in input folder
+            if os.path.exists(INPUT_IMAGE_FOLDER + '/' + image['name'] + '.json'):
+                shutil.copy(INPUT_IMAGE_FOLDER + '/' + image['name'] + '.json', output_folder + '/' +  image['label'] + '/' + image['name'] + '.json')
+
             shutil.copy(INPUT_IMAGE_FOLDER + '/' + image['name'], output_folder + '/' +  image['label'] + '/' + image['name'])
 
     return jsonify({"success":True,  "info": "Done :)"})
