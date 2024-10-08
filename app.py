@@ -110,8 +110,10 @@ def random_image64():
         filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
 
     if not list_not_empty and not filename:
-        # No images to predict
-        return jsonify({"success":False, "info": "No unlabeled images left"})
+        # No predicted images
+        filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
+        if not filename:
+            return jsonify({"success":False, "info": "No unlabeled images left"})
 
     image = INPUT_IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
@@ -145,11 +147,10 @@ def tag_img_get_new():
         filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
 
     if not list_not_empty and not filename:
-        # No images to predict
-        return jsonify({"success":False, "info": "No unlabeled images left"})
-
-    # if not filename:
-    #     return jsonify({"success":False, "info": "No unprocessed images left"})
+        # No predicted images
+        filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
+        if not filename:
+            return jsonify({"success":False, "info": "No unlabeled images left"})
 
     image = INPUT_IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
