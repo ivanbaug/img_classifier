@@ -209,6 +209,7 @@ async function sendImgTypeGetNewImg(imgType) {
 }
 
 async function copyImgsToNewFolder() {
+    showSpinner();
     try {
         const response = await fetch(API_URL + "/copy_imgs_to_new_folder?session=" + sessionId , {
             method: 'GET',
@@ -219,15 +220,17 @@ async function copyImgsToNewFolder() {
         const data = await response.json();
 
         if (data.success === false) {
-            alert(data.info);
+            hideSpinner();
+            alert(data.info);            
             return;
         }
         else {
+            hideSpinner();
             alert(data.info);
         }
 
     } catch (error) {
-        // console.error('Error fetching image:', error);
+        hideSpinner();
     }
 }
 
