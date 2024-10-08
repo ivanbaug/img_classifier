@@ -9,7 +9,7 @@ import shutil
 
 from flask_cors import CORS, cross_origin
 
-from settings.config import log_config, db_file, IMAGE_FOLDER, SESSION_OUTPUT_FOLDER
+from settings.config import log_config, db_file, INPUT_IMAGE_FOLDER, SESSION_OUTPUT_FOLDER
 import db.db_funcs as dbf
 import classifier.classifier as clf
 
@@ -30,7 +30,7 @@ dbf.initialize_db(db_file)
 
 def initialize_images_in_db():
     accepted_extensions = ['.apng', '.avif', '.gif', '.jpg', '.jpeg', '.jfif', '.pjpeg', '.pjp', '.png', '.svg', '.webp', '.bmp']
-    images = os.listdir(IMAGE_FOLDER)
+    images = os.listdir(INPUT_IMAGE_FOLDER)
     images = [i for i in images if os.path.splitext(i)[1].lower() in accepted_extensions] # Filter out non-image files
     images_set = set(images)
 
@@ -113,7 +113,7 @@ def random_image64():
         # No images to predict
         return jsonify({"success":False, "info": "No unlabeled images left"})
 
-    image = IMAGE_FOLDER + '/' + filename
+    image = INPUT_IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
 
     stats = dbf.get_stats_from_session(db_file, session_id)
@@ -135,9 +135,6 @@ def tag_img_get_new():
     dbf.update_image_label(db_file, session_id, filename, label)
     dbf.set_prediction_processed(db_file,filename, session_id)
     labeled_count, total_count = dbf.update_session_labeled_count(db_file, session_id)
-
-
-
     
     # Get a new image
     # filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
@@ -154,7 +151,7 @@ def tag_img_get_new():
     # if not filename:
     #     return jsonify({"success":False, "info": "No unprocessed images left"})
 
-    image = IMAGE_FOLDER + '/' + filename
+    image = INPUT_IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
 
     stats = dbf.get_stats_from_session(db_file, session_id)
@@ -207,7 +204,7 @@ def copy_imgs_to_new_folder():
 
     for image in imgs_list:
         if image['label']:
-            shutil.copy(IMAGE_FOLDER + '/' + image['name'], output_folder + '/' +  image['label'] + '/' + image['name'])
+            shutil.copy(INPUT_IMAGE_FOLDER + '/' + image['name'], output_folder + '/' +  image['label'] + '/' + image['name'])
 
     return jsonify({"success":True,  "info": "Done :)"})
 

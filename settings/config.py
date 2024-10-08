@@ -10,12 +10,12 @@ if PRODUCTION:
 else:
     VOLUME_PATH = ''
 
-logging_file = VOLUME_PATH + 'app.log'
-db_file = VOLUME_PATH + 'db.sqlite3'
+logging_file = VOLUME_PATH + 'data/app.log'
+db_file = VOLUME_PATH + 'data/db.sqlite3'
 
-IMAGE_FOLDER = VOLUME_PATH + 'static/images'
-SESSION_OUTPUT_FOLDER = VOLUME_PATH + 'static/output'
-CLS_MODEL_FOLDER = VOLUME_PATH + 'classifier/models'
+INPUT_IMAGE_FOLDER = VOLUME_PATH + 'data/images/input'
+SESSION_OUTPUT_FOLDER = VOLUME_PATH + 'data/images/output'
+CLS_MODEL_FOLDER = VOLUME_PATH + 'data/models'
 
 # Nice guide to logging config with dictionary
 # https://coderzcolumn.com/tutorials/python/logging-config-simple-guide-to-configure-loggers-from-dictionary-and-config-files-in-python

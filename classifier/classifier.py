@@ -3,7 +3,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from settings.config import log_config, db_file, IMAGE_FOLDER, CLS_MODEL_FOLDER
+from settings.config import log_config, db_file, INPUT_IMAGE_FOLDER, CLS_MODEL_FOLDER
 import db.db_funcs as dbf
 
 import logging
@@ -203,7 +203,7 @@ def predict_images(session_id, image_amount) -> bool:
 
     model = tf.keras.models.load_model(model_filepath)
     for image_name in image_list[:image_amount]:
-        image_path = IMAGE_FOLDER + '/' + image_name
+        image_path = INPUT_IMAGE_FOLDER + '/' + image_name
         image = tf.io.read_file(image_path)
         image = tf.image.decode_image(image, channels=3, expand_animations = False)
         image = tf.image.resize(image, [256, 256])

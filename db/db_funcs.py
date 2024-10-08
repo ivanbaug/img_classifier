@@ -1,6 +1,6 @@
 import sqlite3
 from contextlib import contextmanager
-from settings.config import log_config, IMAGE_FOLDER
+from settings.config import log_config, INPUT_IMAGE_FOLDER
 
 import logging, json
 from logging import config as logging_config
@@ -205,7 +205,7 @@ def get_all_labeled_images(db_filepath: str, session_id: int) -> list[dict]:
         rows = cursor.fetchall()
         data_list = []
         for row in rows:
-            data_list.append({'filename': IMAGE_FOLDER+'/'+row[0], 'class': row[1]})
+            data_list.append({'filename': INPUT_IMAGE_FOLDER+'/'+row[0], 'class': row[1]})
         return data_list
     
     
@@ -218,7 +218,7 @@ def get_unprocessed_labeled_images(db_filepath: str, session_id: int) -> list[di
         rows = cursor.fetchall()
         data_list = []
         for row in rows:
-            data_list.append({'filename': IMAGE_FOLDER+'/'+row[0], 'class': row[1]})
+            data_list.append({'filename': INPUT_IMAGE_FOLDER+'/'+row[0], 'class': row[1]})
         return data_list
     
 
@@ -244,6 +244,8 @@ def get_label_map(db_filepath: str, session_id: int) -> dict[int, str]:
     with db_ops(db_filepath) as cursor:
         cursor.execute("SELECT label_map FROM session WHERE session_id=?", (session_id,))
         json_label_map = cursor.fetchone()[0]
+        if json_label_map is None:
+            return None
         label_map = json.loads(json_label_map, object_hook=jsonKeys2int)
         return label_map
     
