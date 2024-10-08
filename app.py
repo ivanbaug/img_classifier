@@ -106,6 +106,7 @@ def random_image64():
 
     filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
     list_not_empty = True # Assumes there are images to predict
+    stats = dbf.get_stats_from_session(db_file, session_id)
     if not filename:
         list_not_empty = clf.predict_images(session_id=session_id, image_amount=50)
         filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
@@ -114,16 +115,12 @@ def random_image64():
         # No predicted images
         filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
         if not filename:
-            return jsonify({"success":False, "info": "No unlabeled images left"})
+            return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})
 
     image = INPUT_IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
 
-    stats = dbf.get_stats_from_session(db_file, session_id)
-
-    # predicted = clf.predict_image(image, session_id)
-
-
+    
 
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
 
@@ -143,6 +140,7 @@ def tag_img_get_new():
     # filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
     filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
     list_not_empty = True # Assumes there are images to predict
+    stats = dbf.get_stats_from_session(db_file, session_id)
     if not filename:
         list_not_empty = clf.predict_images(session_id=session_id, image_amount=50)
         filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
@@ -151,12 +149,12 @@ def tag_img_get_new():
         # No predicted images
         filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
         if not filename:
-            return jsonify({"success":False, "info": "No unlabeled images left"})
+            return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})
 
     image = INPUT_IMAGE_FOLDER + '/' + filename
     encoded_string = get_response_scaled_image(image)
 
-    stats = dbf.get_stats_from_session(db_file, session_id)
+    
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
 
 
