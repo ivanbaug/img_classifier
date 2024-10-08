@@ -173,6 +173,12 @@ async function sendImgTypeGetNewImg(imgType) {
         console.log(data);
 
         if (statusCode === 200) {
+
+            if (data.success === false) {
+                alert(data.info);
+                hideSpinner(); 
+                return;
+            }
             
             currentFilename = data.filename;
             // check file type by reading the file extension
@@ -188,14 +194,13 @@ async function sendImgTypeGetNewImg(imgType) {
             // Display the predicted class
             displayPredicted(data);
         } else {
-            console.log(data.info);
-            
+            console.log(data.info);                    
         }
         hideSpinner();
 
 
     } catch (error) {
-        console.log(data.info);
+        // console.log(data.info);
         console.error('Error fetching image:', error);
         hideSpinner();
     }
@@ -303,8 +308,6 @@ function getQueryVariable(variable) {
     alert('Query Variable ' + variable + ' not found');
   }
 
-
-
 if (firstLoad) {
     fetchImage();
     firstLoad = false;
@@ -313,12 +316,11 @@ if (firstLoad) {
 const spinner = document.getElementById('spinner');
 
 function showSpinner() {
-    console.log('show spinner');
-    
+    // console.log('show spinner');    
     spinner.classList.remove('hidden');
 }
 
 function hideSpinner() {
-    console.log('hide spinner');
+    // console.log('hide spinner');
     spinner.classList.add('hidden');
 }
