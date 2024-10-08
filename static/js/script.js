@@ -101,6 +101,7 @@ async function fetchImage() {
         const data = await response.json();
 
         if (data.success === false) {
+            displayStats(data);
             alert(data.info);
             return;
         }
@@ -175,6 +176,7 @@ async function sendImgTypeGetNewImg(imgType) {
         if (statusCode === 200) {
 
             if (data.success === false) {
+                displayStats(data);
                 alert(data.info);
                 hideSpinner(); 
                 return;
@@ -271,8 +273,10 @@ function displayStats(data){
         const statsElement = document.getElementById('listStats');
         const totalStatsElement = document.getElementById('totalStats');
         const total = data.stats.reduce((a, b) => a + b.amount, 0);
-        console.log(total);
-        const objRemaining = data.stats.find(obj => obj.class === '');
+        let objRemaining = data.stats.find(obj => obj.class === '');
+        if (!objRemaining) {
+            objRemaining = {amount: 0};
+        }
         const labeled = total - objRemaining.amount;
 
         totalStatsElement.innerHTML = `Total: ${total} Labeled: ${labeled} Remaining: ${objRemaining.amount}`;
