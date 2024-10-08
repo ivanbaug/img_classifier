@@ -174,3 +174,4 @@ sorted_images/
 static/output/
 tmp/
 *.h5
+data/images/*
