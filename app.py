@@ -19,7 +19,7 @@ from logging import config as logging_config
 logging_config.dictConfig(log_config)
 logger = logging.getLogger()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='./frontend/dist', static_url_path='')
 
 CORS(app)
 
@@ -87,16 +87,14 @@ def initialize_images_in_db():
 @app.route('/')
 def index(): 
     initialize_images_in_db()
-    return render_template('index.html', title='Image Classifier', header='Image Classifier - Sessions', subheader='Pick a session or create a new one')
-    # return send_from_directory(app.static_folder, 'index.html')
-    # return redirect(url_for('show_image', image_id=0))
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/classify')
-def classify(): 
-    return render_template('classi.html', title='Image Classifier', header='Image Classifier')
-
+def classify():
+    session_id = request.args.get('session')
+    return send_from_directory(app.static_folder, 'classify/index.html')
     
-@app.route('/random_image64')
+@app.route('/api/random_image64')
 # @cross_origin()
 def random_image64():
     print(request.args)
@@ -124,7 +122,7 @@ def random_image64():
 
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
 
-@app.route('/tag_img_get_new', methods=['POST'])
+@app.route('/api/tag_img_get_new', methods=['POST'])
 def tag_img_get_new():
     # Update the tag/label of the image
     content = request.get_json()
@@ -176,7 +174,7 @@ def get_response_scaled_image(image_path):
     return encoded_img
 
 
-@app.route('/copy_imgs_to_new_folder')
+@app.route('/api/copy_imgs_to_new_folder')
 # @cross_origin()
 def copy_imgs_to_new_folder():
     print(request.args)
@@ -212,14 +210,14 @@ def copy_imgs_to_new_folder():
 
     return jsonify({"success":True,  "info": "Done :)"})
 
-@app.route('/get_available_sessions')
+@app.route('/api/get_available_sessions')
 # @cross_origin()
 def get_available_sessions():
     sessions = dbf.get_sessions(db_file, imgs_are_available=True)
     return jsonify({"success":True, "data":sessions, "info": "OK"})
 
 
-@app.route('/train_model', methods=['POST'])
+@app.route('/api/train_model', methods=['POST'])
 def train_model():
     # session_id = request.args.get('sessionId')
     # full_train = request.args.get('fullTrain')
@@ -234,6 +232,8 @@ def train_model():
     except ValueError as e:
         return jsonify({"success":False, "info": str(e)})
     return jsonify({"success":True, "info": "OK"})
+
+
 
 if __name__ == '__main__':
     initialize_images_in_db()

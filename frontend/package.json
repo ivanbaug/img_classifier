@@ -1,17 +1,19 @@
 {
-  "name": "classifier-front",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "front-astro",
+  "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build:css": "npx tailwindcss -i ./src/css/input.css -o ../static/css/styles.css --minify",
-    "watch:css": "npx tailwindcss -i ./src/css/input.css -o ../static/css/styles.css --watch"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "tailwindcss": "^3.4.3"
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/tailwind": "^5.1.2",
+    "astro": "^4.16.13",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.7.2"
   }
 }
