@@ -33,6 +33,11 @@ source $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 mkdir -p $CONDA_PREFIX/lib/nvvm/libdevice
 cp $CONDA_PREFIX/lib/libdevice.10.bc $CONDA_PREFIX/lib/nvvm/libdevice/
 ```
+### Building the frontend
+```
+cd ./frontend
+npm run build
+```
 
 ## Usage
 
@@ -49,15 +54,17 @@ Note: This is a personal project meant to run locally and only when required so 
 
 The image files to be processed should be placed in `./data/images/input` from there, accessing `localhost:5000` from a browser will bring us to the main page, where one can select a 'session' sessions are automatically created when images are added to the folder mentioned before.
 
-The classification is meant to be done by hand, once `batch_size` (32) or more images are labelled, one can train the model for the first time (click on `Train Full`). After that the model can be retrained in full or fine-tuned when more images are labelled.
+The classification is meant to be done by hand, once `batch_size` (32) or more images are labelled, one can train the model for the first time (click on `Train Full`). After that the model can be retrained in full or fine-tuned when more images are labeled.
 
-After training the model the UI will recommend the labels for the following images with a '👇' emoji. The images will be recommended in groups so one does not have to move the hand as much.
+After training the model, the UI will recommend the labels for the following images with a '👇' emoji. The images will be recommended in groups so one does not have to move the hand as much.
 
-Finally, by clicking on `Move Imgs Dir` the labelled images are moved to the output folders grouped by label.
+Finally, by clicking on `Move labeled images` the labelled images are moved to the output folders grouped by label.
 
-### Screenshots
-![Session Selector](/readme_imgs/c2.jpg)
-![Classifier](/readme_imgs/c1.jpg)
+
+
+## Screenshots
+![Session Selector](/readme_imgs/c1.jpg)
+![Classifier](/readme_imgs/c2.jpg)
 
 
 Note: I am aware that there are open source and freemium alternatives that can sort and label images on a larger scale like immich, and also data storage costs often go down. But this project the way I imagine an image classifier for not a great amount of images, just the ones I have.

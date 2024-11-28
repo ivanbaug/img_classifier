@@ -9,10 +9,10 @@ const title = "Image Classifier - Sessions";
 	<main>
 		<div class="container mx-auto">
 			<div class="flex flex-col items-center m-8">
-				<div class="text-slate-200 text-3xl font-bold mt-4">
+				<div class="text-slate-200 text-3xl font-light mt-4">
 					Pick a session or create a new one
 				</div>
-				<div id="btnContainer" class="py-8 flex flex-col gap-2 h-auto w-fit">
+				<div id="btnContainer" class="py-8 flex flex-col gap-3 h-auto w-fit">
 				</div>
 			</div>
 		</div>
@@ -52,29 +52,44 @@ const title = "Image Classifier - Sessions";
 					}
 
 					res.data?.forEach((session) => {
-						const btn = document.createElement("button");
-						btn.textContent = `Session ${session.session_id.toString()} - (${session.img_labeled}/${session.img_total})`;
-						btn.id = `btn-${session.session_id.toString()}`;
-						btn.addEventListener("click", function () {
-							document.location.href = `classify?session=${session.session_id.toString()}`;
-						});
-						btn.classList.add(
-							"bg-sky-700",
-							"hover:bg-sky-900",
-							"text-white",
-							"font-bold",
-							"py-2",
-							"px-4",
-							"w-full",
-							"rounded",
-						);
-						if (btnContainer) {
+						const btn = createCustomButton(session);
+						if (btnContainer && btn) {
 							btnContainer.appendChild(btn);
 						}
 					});
 				} catch (error) {
 					console.error("Error fetching image:", error);
 				}
+			}
+
+			function createCustomButton(session: Session) {
+				const btn = document.createElement("button");
+				const spanParent = document.createElement("span");
+				spanParent.classList.add("flex", "justify-between", "items-center", "gap-4", "w-full");
+				const spanChild1 = document.createElement("span");
+				spanChild1.textContent = `Session ${session.session_id.toString()}`;
+				const spanChild2 = document.createElement("span");
+				spanChild2.textContent = `${session.img_labeled}/${session.img_total}`;
+				spanParent.appendChild(spanChild1);
+				spanParent.appendChild(spanChild2);
+				btn.appendChild(spanParent);
+				btn.addEventListener("click", function () {
+					document.location.href = `classify?session=${session.session_id.toString()}`;
+				});
+				btn.classList.add(
+					"bg-sky-700",
+					"hover:bg-sky-900",
+					"text-slate-100",
+					"hover:text-slate-300",
+					"font-normal",
+					"py-4",
+					"px-4",
+					"w-full",
+					"rounded",
+					"flex",
+					"justify-right",
+				);
+				return btn;
 			}
 
 			if (firstLoad) {

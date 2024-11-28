@@ -16,12 +16,12 @@ const title = "Image Classifier - Classify";
 						class="h-96 rounded-md"
 					/>
 				</div>
-				<div class="py-8 flex justify-center w-1/2 gap-3">
+				<div class="pt-5 pb-10 flex justify-center w-1/2 gap-3">
 					<div class="flex flex-col items-center justify-end">
 						<div id="screenshotPredicted">👇</div>
 						<button
 							id="screenshotBtn"
-							class="bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-2 px-4 w-36 rounded"
+							class="bg-indigo-700 hover:bg-indigo-900 text-zinc-50 hover:text-zinc-200  py-2 px-4 w-36 rounded"
 							>Screenshot</button
 						>
 					</div>
@@ -29,7 +29,7 @@ const title = "Image Classifier - Classify";
 						<div id="keepPredicted">👇</div>
 						<button
 							id="keepBtn"
-							class="bg-sky-700 hover:bg-sky-900 text-white font-bold py-2 px-4 w-36 rounded"
+							class="bg-sky-700 hover:bg-sky-900 text-zinc-50 hover:text-zinc-200  py-2 px-4 w-36 rounded"
 							>Keep</button
 						>
 					</div>
@@ -37,36 +37,38 @@ const title = "Image Classifier - Classify";
 						<div id="workPredicted">👇</div>
 						<button
 							id="workBtn"
-							class="bg-lime-700 hover:bg-lime-900 text-white font-bold py-2 px-4 w-36 rounded"
+							class="bg-lime-700 hover:bg-lime-900 text-zinc-50 hover:text-zinc-200 py-2 px-4 w-36 rounded"
 							>Work</button
 						>
 					</div>
 				</div>
-				<div class="flex w-2/3 justify-around">
-					<div class="flex w-3/4 bg-zinc-800 rounded p-4 border border-zinc-700">
-						<div class="text-slate-200">
-							<span id="totalStats"></span>
-							<ul id="listStats"></ul>
+				<div class="flex w-1/2 justify-around gap-9">
+					<div class="flex flex-col justify-around w-3/4 grow bg-zinc-800 rounded p-4 border border-zinc-700">
+						<div id="totalStats" class="flex text-zinc-100 w-full gap-4 justify-evenly">
+							<!-- Generated on runtime -->
+						</div>
+						<div id="listStats" class="flex text-zinc-100 w-full gap-4 justify-evenly">
+							<!-- Generated on runtime -->
 						</div>
 					</div>
 
 					<div
-						class="py-8 flex flex-col items-center content-start gap-3 w-3/4"
+						class="py-8 flex flex-col items-center content-start gap-3"
 					>
 					
 						<button
 							id="savePrcBtn"
-							class="bg-sky-700 hover:bg-sky-900 text-white font-bold py-2 px-4 w-64 rounded"
+							class="bg-sky-700 hover:bg-sky-900 text-zinc-50 hover:text-zinc-200 py-2 px-4 w-64 rounded"
 							>Move labeled images</button
 						>
 						<button
 							id="trainFullBtn"
-							class="bg-sky-700 hover:bg-sky-900 text-white font-bold py-2 px-4 w-64 rounded"
+							class="bg-sky-700 hover:bg-sky-900 text-zinc-50 hover:text-zinc-200 py-2 px-4 w-64 rounded"
 							>Train Full</button
 						>
 						<button
 							id="trainFineTuneBtn"
-							class="bg-sky-700 hover:bg-sky-900 text-white font-bold py-2 px-4 w-64 rounded"
+							class="bg-sky-700 hover:bg-sky-900 text-zinc-50 hover:text-zinc-200 py-2 px-4 w-64 rounded"
 							>FineTune</button
 						>
 					</div>
@@ -384,21 +386,47 @@ const title = "Image Classifier - Classify";
 					}
 					const labeled = total - objRemaining.amount;
 					if (totalStatsElement) {
-						totalStatsElement.innerHTML = `Total: ${total} Labeled: ${labeled} Remaining: ${objRemaining?.amount}`;
+						totalStatsElement.innerHTML = "";
+						if (labeled && labeled >= 0) {
+							totalStatsElement.appendChild(
+								generateStatElement("LABELED", labeled),
+							);
+						}
+						if (objRemaining.amount && objRemaining.amount >= 0) {
+							totalStatsElement.appendChild(
+								generateStatElement("REMAINING", objRemaining.amount),
+							);
+						}
+						if (total && total >= 0) {
+							totalStatsElement.appendChild(
+								generateStatElement("TOTAL", total),
+							);
+						}
 					}
 					// Display the stats as a ul list
 					if (statsElement) {
 						statsElement.innerHTML = "";
-					}
-					data.stats.forEach((stat) => {
-						// skip if class is empty
-						if (stat.class == "") {
-							return;
-						}
-						const li = document.createElement("li");
-						li.innerHTML = `${stat.class}: ${stat.amount}`;
-						statsElement?.appendChild(li);
+						data.stats.forEach((stat) => {
+							// skip if class is empty
+							if (stat.class == "") {
+								return;
+							}
+							let decorationColor = "";
+							if (stat.class === "screenshot") {
+								decorationColor = "decoration-indigo-700";
+							}
+							if (stat.class === "work") {
+								decorationColor = "decoration-lime-700";
+							}
+							if (stat.class === "keep") {
+								decorationColor = "decoration-sky-700";
+							}
+
+							const statDiv = generateStatElement(("" + stat.class).toUpperCase(), stat.amount, decorationColor);
+							statsElement?.appendChild(statDiv);
 					});
+					}
+
 				} else {
 					const statsElement = document.getElementById("listStats");
 					const totalStatsElement =
@@ -409,6 +437,19 @@ const title = "Image Classifier - Classify";
 					if (statsElement) {
 						statsElement.innerHTML = "";
 					}
+				}
+				function generateStatElement(stat: string, value: string | number, decorationColor = "decoration-inherit"){
+					const div = document.createElement("div");
+					div.classList.add("flex", "flex-col", "items-center");
+					const valueDiv = document.createElement("div");
+					valueDiv.classList.add("text-4xl");
+					valueDiv.textContent = "" + value;
+					const statDiv = document.createElement("div");
+					statDiv.classList.add("font-light", "tracking-wide", "-mt-1", "underline", "decoration-1", decorationColor);
+					statDiv.textContent = stat;
+					div.appendChild(valueDiv);
+					div.appendChild(statDiv);
+					return div;
 				}
 			}
 
