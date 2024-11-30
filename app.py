@@ -134,6 +134,23 @@ def tag_img_get_new():
         
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
 
+@app.route('/api/get_img_by_filename', methods=['POST'])
+def get_img_by_filename():
+    # Get data for a specific image
+    content = request.get_json()
+    filename = content['filename']
+    session_id = content['sessionId']
+    
+    # Get selected image
+    filename, encoded_string, predicted_label = get_next_image_data(session_id, filename=filename)
+    stats = dbf.get_stats_from_session(db_file, session_id)
+    
+    if not filename and not encoded_string:
+        errored_images = dbf.get_errored_images_by_session(db_file, session_id)
+        return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats, "errored_images":errored_images})
+        
+    return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
+
 
 def get_response_scaled_image(image_path):
     pil_img = Image.open(image_path, mode='r') # reads the PIL image
@@ -152,9 +169,13 @@ def get_response_scaled_image(image_path):
     return encoded_img
 
 
-def get_next_image_data(session_id):
+def get_next_image_data(session_id, filename=None):
     can_predict_images = True # Assumes there are images to predict
-    filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
+    predicted_label = None
+    if not filename:
+        # If there isnt a specific image to fetch
+        filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
+
     if not filename:
         # generate new batch of predictions
         can_predict_images = clf.predict_images(session_id=session_id, image_amount=50)
