@@ -32,6 +32,9 @@ def initialize_db(db_filepath: str) -> None:
                        'session_id INT, processed BOOLEAN, label TEXT, FOREIGN KEY(session_id) REFERENCES session(session_id))')
         cursor.execute('CREATE TABLE IF NOT EXISTS prediction (pred_id INTEGER PRIMARY KEY, name TEXT, '
                        'label TEXT, processed BOOLEAN, session_id INT, FOREIGN KEY(session_id) REFERENCES session(session_id))')
+        cursor.execute('CREATE TABLE IF NOT EXISTS exc_error (exc_error_id INTEGER PRIMARY KEY, session_id INT, traceback TEXT, '
+                   'image_path TEXT, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(session_id) REFERENCES session(session_id))')
+
         logger.info('Database initialized')
 
 # TODO: Remove if not used
@@ -296,3 +299,20 @@ def get_unprocessed_prediction(db_filepath: str, session_id: int) -> tuple[str, 
         if row is not None:
             return row[0], row[1] # filename, label
         return None, None
+    
+def new_exc_error(db_filepath: str, session_id: int, traceback: str, image_path: str = None):
+    """
+    Add a new exception error to the database.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('INSERT INTO exc_error(session_id, traceback, image_path) VALUES (?, ?, ?)', (session_id, traceback, image_path))
+
+def get_errored_images_by_session(db_filepath: str, session_id: int) -> list[dict]:
+    """
+    Get all exception errors that have an image from a session.
+    """
+    with db_ops(db_filepath) as cursor:
+        cursor.execute('SELECT traceback, image_path, timestamp FROM exc_error WHERE session_id=? AND image_path IS NOT NULL AND image_path != ""', (session_id,))
+        rows = cursor.fetchall()
+        error_list = [{'traceback': row[0], 'image_path': row[1], 'timestamp': row[2]} for row in rows]
+        return error_list
