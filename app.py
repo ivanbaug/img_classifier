@@ -252,6 +252,13 @@ def train_model():
         return jsonify({"success":False, "info": str(e)})
     return jsonify({"success":True, "info": "OK"})
 
+@app.route('/api/refresh_image_init_data')
+def refresh_image_init_data():
+    try:
+        initialize_images_in_db()
+    except Exception as e:
+        return jsonify({"success":False, "info": str(e)})
+    return jsonify({"success":True, "info": "OK"})
 
 
 if __name__ == '__main__':

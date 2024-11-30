@@ -12,7 +12,16 @@ const title = "Image Classifier - Sessions";
 				<div class="text-slate-200 text-3xl font-light mt-4">
 					Pick a session or create a new one
 				</div>
-				<div id="btnContainer" class="py-8 flex flex-col gap-3 h-auto w-fit">
+				<div class="flex flex-col items-center h-auto w-fit">
+					<div id="btnContainer" class="py-8 flex flex-col gap-3 h-auto w-full">
+					</div>
+					<div class="pt-4 pb-3 flex flex-col gap-3 h-auto w-fit">
+						<button id="refreshImgBtn" class="bg-lime-700 hover:bg-lime-900 text-zinc-50 hover:text-zinc-200 font-normal py-4 px-4 w-full rounded flex justify-right">
+							<span class="flex justify-between items-center gap-4 w-full">
+								<span>Check for folder changes</span>
+							</span>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -33,6 +42,14 @@ const title = "Image Classifier - Sessions";
 
 			let firstLoad = true;
 			const btnContainer = document.getElementById("btnContainer");
+			const refreshImgBtn = document.getElementById("refreshImgBtn");
+
+			refreshImgBtn?.addEventListener("click", async function () {
+				void await refreshInitialImageData();
+				void await getAvailableSessions();
+			});
+
+
 
 			async function getAvailableSessions() {
 				try {
@@ -51,6 +68,10 @@ const title = "Image Classifier - Sessions";
 						return;
 					}
 
+					if (btnContainer) {
+						btnContainer.innerHTML = "";
+					}
+
 					res.data?.forEach((session) => {
 						const btn = createCustomButton(session);
 						if (btnContainer && btn) {
@@ -59,6 +80,26 @@ const title = "Image Classifier - Sessions";
 					});
 				} catch (error) {
 					console.error("Error fetching image:", error);
+				}
+			}
+
+			async function refreshInitialImageData() {
+				try {
+					const response = await fetch(
+						API_URL + "/refresh_image_init_data",
+						{
+							method: "GET",
+						},
+					);
+
+					const res: ResponseData = await response.json();
+
+					if (res.success === false) {
+						alert(res.info);
+						return;
+					}
+				} catch (error) {
+					console.error("Error refreshing init data:", error);
 				}
 			}
 
