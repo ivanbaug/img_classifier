@@ -101,26 +101,15 @@ def random_image64():
     session_id = request.args.get('session')
     if not session_id:
         return jsonify({"success":False, "info": "No session ID received"})
-
-    filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
-    list_not_empty = True # Assumes there are images to predict
-    stats = dbf.get_stats_from_session(db_file, session_id)
-    if not filename:
-        list_not_empty = clf.predict_images(session_id=session_id, image_amount=50)
-        filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
-
-    if not list_not_empty and not filename:
-        # No predicted images
-        filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
-        if not filename:
-            return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})
-
-    image = INPUT_IMAGE_FOLDER + '/' + filename
-    encoded_string = get_response_scaled_image(image)
-
     
+    filename, encoded_string, predicted_label = get_next_image_data(session_id)
+    stats = dbf.get_stats_from_session(db_file, session_id)
+
+    if not filename and not encoded_string:
+        return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})    
 
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
+
 
 @app.route('/api/tag_img_get_new', methods=['POST'])
 def tag_img_get_new():
@@ -135,24 +124,12 @@ def tag_img_get_new():
     labeled_count, total_count = dbf.update_session_labeled_count(db_file, session_id)
     
     # Get a new image
-    # filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
-    filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
-    list_not_empty = True # Assumes there are images to predict
+    filename, encoded_string, predicted_label = get_next_image_data(session_id)
     stats = dbf.get_stats_from_session(db_file, session_id)
-    if not filename:
-        list_not_empty = clf.predict_images(session_id=session_id, image_amount=50)
-        filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
-
-    if not list_not_empty and not filename:
-        # No predicted images
-        filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
-        if not filename:
-            return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})
-
-    image = INPUT_IMAGE_FOLDER + '/' + filename
-    encoded_string = get_response_scaled_image(image)
-
     
+    if not filename and not encoded_string:
+        return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})
+        
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
 
 
@@ -172,6 +149,28 @@ def get_response_scaled_image(image_path):
 
     encoded_img = base64.encodebytes(byte_arr.getvalue()).decode('ascii') # encode as base64
     return encoded_img
+
+
+def get_next_image_data(session_id):
+    can_predict_images = True # Assumes there are images to predict
+    filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
+    if not filename:
+        # generate new batch of predictions
+        can_predict_images = clf.predict_images(session_id=session_id, image_amount=50)
+        filename, predicted_label = dbf.get_unprocessed_prediction(db_file, session_id)
+    
+    if not filename:
+        # There are no image predictions, try to get a random unlabeled image 
+        filename = dbf.obtain_random_unlabeled_image(db_file, session_id)
+
+    if not can_predict_images and not filename:
+        # No unlabeled images left
+        return None, None, None
+    
+    image = INPUT_IMAGE_FOLDER + '/' + filename
+    encoded_string = get_response_scaled_image(image)
+
+    return filename, encoded_string, predicted_label
 
 
 @app.route('/api/copy_imgs_to_new_folder')
