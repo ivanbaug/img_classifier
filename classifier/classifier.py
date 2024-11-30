@@ -8,6 +8,7 @@ import db.db_funcs as dbf
 
 import logging
 from logging import config as logging_config
+from tensorflow.python.framework.errors_impl import InvalidArgumentError
 logging_config.dictConfig(log_config)
 logger = logging.getLogger()
 
@@ -198,20 +199,27 @@ def predict_images(session_id, image_amount) -> bool:
 
     model_filepath = CLS_MODEL_FOLDER + f'/model_{session_id}.h5'
     if not os.path.exists(model_filepath):
-        logger.error(f"Model file not found: {model_filepath}")
-        return None
+        map_index_to_label = dbf.get_label_map(db_file, 2) # try to get the label map from the database
+        model_filepath = CLS_MODEL_FOLDER + f'/model_base.h5'
+        if not os.path.exists(model_filepath):
+            logger.error(f"Model file not found: {model_filepath}")
+            return None
 
     model = tf.keras.models.load_model(model_filepath)
     for image_name in image_list[:image_amount]:
         image_path = INPUT_IMAGE_FOLDER + '/' + image_name
         image = tf.io.read_file(image_path)
-        image = tf.image.decode_image(image, channels=3, expand_animations = False)
-        image = tf.image.resize(image, [256, 256])
-        image = tf.expand_dims(image, axis=0)
-        image = image / 255.0
-        prediction = model.predict(image)
-
-        dbf.add_prediction(db_file, image_name, map_index_to_label[np.argmax(prediction)], session_id)
-
+        try:
+            image = tf.image.decode_image(image, channels=3, expand_animations = False)
+            image = tf.image.resize(image, [256, 256])
+            image = tf.expand_dims(image, axis=0)
+            image = image / 255.0
+            prediction = model.predict(image)
+            dbf.add_prediction(db_file, image_name, map_index_to_label[np.argmax(prediction)], session_id)
+        except InvalidArgumentError as e:
+            import traceback
+            tb = traceback.format_exc()
+            logger.error(f"{tb}")
+            logger.error(f"Error predicting image: {image_path}")
     
     return True
