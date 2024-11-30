@@ -219,6 +219,7 @@ def predict_images(session_id, image_amount) -> bool:
         except InvalidArgumentError as e:
             import traceback
             tb = traceback.format_exc()
+            dbf.new_exc_error(db_file, session_id, tb, image_path)
             logger.error(f"{tb}")
             logger.error(f"Error predicting image: {image_path}")
     
