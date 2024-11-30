@@ -106,7 +106,8 @@ def random_image64():
     stats = dbf.get_stats_from_session(db_file, session_id)
 
     if not filename and not encoded_string:
-        return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})    
+        errored_images = dbf.get_errored_images_by_session(db_file, session_id)
+        return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats, "errored_images":errored_images})
 
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
 
@@ -128,7 +129,8 @@ def tag_img_get_new():
     stats = dbf.get_stats_from_session(db_file, session_id)
     
     if not filename and not encoded_string:
-        return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats})
+        errored_images = dbf.get_errored_images_by_session(db_file, session_id)
+        return jsonify({"success":False, "info": "No unlabeled images left", "stats":stats, "errored_images":errored_images})
         
     return jsonify({"success":True, "image":encoded_string , "filename":filename, "info": "OK", "stats":stats, "predicted": predicted_label})
 
@@ -144,7 +146,6 @@ def get_response_scaled_image(image_path):
 
 
     byte_arr = io.BytesIO()
-    # pil_img.save(byte_arr, format=img_format) # convert the PIL image to byte array
     pil_img.save(byte_arr, format=img_format) # convert the PIL image to byte array
 
     encoded_img = base64.encodebytes(byte_arr.getvalue()).decode('ascii') # encode as base64
@@ -218,8 +219,6 @@ def get_available_sessions():
 
 @app.route('/api/train_model', methods=['POST'])
 def train_model():
-    # session_id = request.args.get('sessionId')
-    # full_train = request.args.get('fullTrain')
     content = request.get_json()
     session_id = content['sessionId']
     full_train = content['fullTrain']
