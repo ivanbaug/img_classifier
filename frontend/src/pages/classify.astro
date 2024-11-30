@@ -9,19 +9,42 @@ const title = "Image Classifier - Classify";
 	<main>
 		<div class="container mx-auto">
 			<div class="flex flex-col items-center m-8">
-				<div id="currentImage" class="bg-slate-950 h-1/2 rounded-md">
+				<div
+					id="currentImage"
+					class="bg-slate-950 h-1/2 rounded-md relative"
+				>
 					<img
 						id="imageElement"
 						alt="Fetched Image"
 						class="h-96 rounded-md"
 					/>
+					<button
+						id="previousImgBtn"
+						class="absolute top-2 left-2 bg-zinc-800 hover:bg-zinc-600 text-zinc-50 hover:text-zinc-200 py-1 px-3 rounded z-10 bg-opacity-0 hover:bg-opacity-20 border border-zinc-200 border-opacity-10 hover:border-opacity-900"
+					>
+						<svg
+							class="h-8 w-8 text-zinc-200 opacity-50 hover:opacity-100"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							stroke-width="2"
+							stroke="currentColor"
+							fill="none"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path stroke="none" d="M0 0h24v24H0z"></path>
+							<path d="M9 13l-4 -4l4 -4m-4 4h11a4 4 0 0 1 0 8h-1"
+							></path></svg
+						>
+					</button>
 				</div>
 				<div class="pt-5 pb-10 flex justify-center w-1/2 gap-3">
 					<div class="flex flex-col items-center justify-end">
 						<div id="screenshotPredicted">👇</div>
 						<button
 							id="screenshotBtn"
-							class="bg-indigo-700 hover:bg-indigo-900 text-zinc-50 hover:text-zinc-200  py-2 px-4 w-36 rounded"
+							class="bg-indigo-700 hover:bg-indigo-900 text-zinc-50 hover:text-zinc-200 py-2 px-4 w-36 rounded"
 							>Screenshot</button
 						>
 					</div>
@@ -29,7 +52,7 @@ const title = "Image Classifier - Classify";
 						<div id="keepPredicted">👇</div>
 						<button
 							id="keepBtn"
-							class="bg-sky-700 hover:bg-sky-900 text-zinc-50 hover:text-zinc-200  py-2 px-4 w-36 rounded"
+							class="bg-sky-700 hover:bg-sky-900 text-zinc-50 hover:text-zinc-200 py-2 px-4 w-36 rounded"
 							>Keep</button
 						>
 					</div>
@@ -43,11 +66,19 @@ const title = "Image Classifier - Classify";
 					</div>
 				</div>
 				<div class="flex w-1/2 justify-around gap-9">
-					<div class="flex flex-col justify-around w-3/4 grow bg-zinc-800 rounded p-4 border border-zinc-700">
-						<div id="totalStats" class="flex text-zinc-100 w-full gap-4 justify-evenly">
+					<div
+						class="flex flex-col justify-around w-3/4 grow bg-zinc-800 rounded p-4 border border-zinc-700"
+					>
+						<div
+							id="totalStats"
+							class="flex text-zinc-100 w-full gap-4 justify-evenly"
+						>
 							<!-- Generated on runtime -->
 						</div>
-						<div id="listStats" class="flex text-zinc-100 w-full gap-4 justify-evenly">
+						<div
+							id="listStats"
+							class="flex text-zinc-100 w-full gap-4 justify-evenly"
+						>
 							<!-- Generated on runtime -->
 						</div>
 					</div>
@@ -55,7 +86,6 @@ const title = "Image Classifier - Classify";
 					<div
 						class="py-8 flex flex-col items-center content-start gap-3"
 					>
-					
 						<button
 							id="savePrcBtn"
 							class="bg-sky-700 hover:bg-sky-900 text-zinc-50 hover:text-zinc-200 py-2 px-4 w-64 rounded"
@@ -116,6 +146,8 @@ const title = "Image Classifier - Classify";
 
 			let sessionId = getQueryVariable("session");
 
+			let recentImages: string[] = [];
+
 			let firstLoad = true;
 			const keepBtn = document.getElementById("keepBtn");
 			const workBtn = document.getElementById("workBtn");
@@ -127,6 +159,8 @@ const title = "Image Classifier - Classify";
 			const trainFullBtn = document.getElementById("trainFullBtn");
 			const trainFineTuneBtn =
 				document.getElementById("trainFineTuneBtn");
+			
+			const previousImgBtn = document.getElementById("previousImgBtn");
 
 			const screenshotEmoji = document.getElementById(
 				"screenshotPredicted",
@@ -165,6 +199,10 @@ const title = "Image Classifier - Classify";
 				trainModel(false);
 			});
 
+			previousImgBtn?.addEventListener("click", function () {
+				getPreviousImage();
+			});
+
 			async function trainModel(fullTrain: boolean) {
 				showSpinner();
 				try {
@@ -197,6 +235,13 @@ const title = "Image Classifier - Classify";
 
 			async function fetchImage() {
 				try {
+					showSpinner();
+					if (recentImages.length > 0) {
+						previousImgBtn?.classList.remove("hidden");
+					} else {
+						previousImgBtn?.classList.add("hidden");
+					}
+
 					const response = await fetch(
 						API_URL + "/random_image64?session=" + sessionId,
 						{
@@ -204,12 +249,15 @@ const title = "Image Classifier - Classify";
 						},
 					);
 
-					const data = await response.json() as ImageResponse;
+					const data = (await response.json()) as ImageResponse;
 
 					if (data.success === false) {
 						displayStats(data);
 						alert(data.info);
-						if (data.errored_images && data.errored_images.length > 0) {
+						if (
+							data.errored_images &&
+							data.errored_images.length > 0
+						) {
 							let errMsg = "";
 							data.errored_images.sort((a, b) => {
 								if (a.timestamp && b.timestamp) {
@@ -220,8 +268,12 @@ const title = "Image Classifier - Classify";
 							data.errored_images.forEach((errorData) => {
 								errMsg += `${errorData.timestamp} - ${errorData.image_path}\n`;
 							});
-							downloadTextFile(errMsg, `error_images_session_${sessionId}.txt`);
+							downloadTextFile(
+								errMsg,
+								`error_images_session_${sessionId}.txt`,
+							);
 						}
+						hideSpinner();
 						return;
 					}
 
@@ -241,7 +293,9 @@ const title = "Image Classifier - Classify";
 
 					// Display the predicted class
 					displayPredicted(data);
+					hideSpinner();
 				} catch (error) {
+					hideSpinner();
 					console.error("Error fetching image:", error);
 				}
 			}
@@ -285,10 +339,10 @@ const title = "Image Classifier - Classify";
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
 						body: JSON.stringify(postData),
-					});
+					});					
 
 					const statusCode = response.status;
-					const data = await response.json() as ImageResponse;
+					const data = (await response.json()) as ImageResponse;
 					console.log(data);
 
 					if (statusCode === 200) {
@@ -296,20 +350,119 @@ const title = "Image Classifier - Classify";
 							displayStats(data);
 							alert(data.info);
 							hideSpinner();
-							if (data.errored_images && data.errored_images.length > 0) {
+							if (
+								data.errored_images &&
+								data.errored_images.length > 0
+							) {
 								let errMsg = "";
 								data.errored_images.sort((a, b) => {
 									if (a.timestamp && b.timestamp) {
-										return a.timestamp > b.timestamp ? 1 : -1;
+										return a.timestamp > b.timestamp
+											? 1
+											: -1;
 									}
 									return 0;
 								});
 								data.errored_images.forEach((errorData) => {
 									errMsg += `${errorData.timestamp} - ${errorData.image_path}\n`;
 								});
-								downloadTextFile(errMsg, `error_images_session_${sessionId}.txt`);
+								downloadTextFile(
+									errMsg,
+									`error_images_session_${sessionId}.txt`,
+								);
 							}
 							return;
+						}
+
+						if (recentImages.length > 10) {
+							recentImages.shift();
+						}
+						recentImages.push(currentFilename);
+
+						if (recentImages.length > 0) {
+							previousImgBtn?.classList.remove("hidden");
+						} else {
+							previousImgBtn?.classList.add("hidden");
+						}
+
+						currentFilename = data.filename || "";
+						// check file type by reading the file extension
+						const fileExt = currentFilename.split(".").pop();
+						const contentType = getContentType(fileExt);
+
+						// Display the image
+						const imgElement = document.getElementById(
+							"imageElement",
+						) as HTMLImageElement;
+						imgElement.src =
+							`data:${contentType};base64,` + data.image;
+						// Display the stats
+						displayStats(data);
+
+						// Display the predicted class
+						displayPredicted(data);
+					} else {
+						console.log(data.info);
+					}
+					hideSpinner();
+				} catch (error) {
+					// console.log(data.info);
+					console.error("Error fetching image:", error);
+					hideSpinner();
+				}
+			}
+
+			async function getPreviousImage() { /// i was selecting previous image
+				showSpinner();
+				try {
+					const previousFilename = recentImages.pop();
+					const postData = {
+						filename: previousFilename,
+						sessionId: sessionId,
+					};
+					const response = await fetch(API_URL + "/get_img_by_filename", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(postData),
+					});					
+
+					const statusCode = response.status;
+					const data = (await response.json()) as ImageResponse;
+					console.log(data);
+
+					if (statusCode === 200) {
+						if (data.success === false) {
+							displayStats(data);
+							alert(data.info);
+							hideSpinner();
+							if (
+								data.errored_images &&
+								data.errored_images.length > 0
+							) {
+								let errMsg = "";
+								data.errored_images.sort((a, b) => {
+									if (a.timestamp && b.timestamp) {
+										return a.timestamp > b.timestamp
+											? 1
+											: -1;
+									}
+									return 0;
+								});
+								data.errored_images.forEach((errorData) => {
+									errMsg += `${errorData.timestamp} - ${errorData.image_path}\n`;
+								});
+								downloadTextFile(
+									errMsg,
+									`error_images_session_${sessionId}.txt`,
+								);
+							}
+							return;
+						}
+
+						if (recentImages.length > 0) {
+							previousImgBtn?.classList.remove("hidden");
+						} else {
+							previousImgBtn?.classList.add("hidden");
 						}
 
 						currentFilename = data.filename || "";
@@ -428,7 +581,10 @@ const title = "Image Classifier - Classify";
 						}
 						if (objRemaining.amount && objRemaining.amount >= 0) {
 							totalStatsElement.appendChild(
-								generateStatElement("REMAINING", objRemaining.amount),
+								generateStatElement(
+									"REMAINING",
+									objRemaining.amount,
+								),
 							);
 						}
 						if (total && total >= 0) {
@@ -456,11 +612,14 @@ const title = "Image Classifier - Classify";
 								decorationColor = "decoration-sky-700";
 							}
 
-							const statDiv = generateStatElement(("" + stat.class).toUpperCase(), stat.amount, decorationColor);
+							const statDiv = generateStatElement(
+								("" + stat.class).toUpperCase(),
+								stat.amount,
+								decorationColor,
+							);
 							statsElement?.appendChild(statDiv);
-					});
+						});
 					}
-
 				} else {
 					const statsElement = document.getElementById("listStats");
 					const totalStatsElement =
@@ -472,14 +631,25 @@ const title = "Image Classifier - Classify";
 						statsElement.innerHTML = "";
 					}
 				}
-				function generateStatElement(stat: string, value: string | number, decorationColor = "decoration-inherit"){
+				function generateStatElement(
+					stat: string,
+					value: string | number,
+					decorationColor = "decoration-inherit",
+				) {
 					const div = document.createElement("div");
 					div.classList.add("flex", "flex-col", "items-center");
 					const valueDiv = document.createElement("div");
 					valueDiv.classList.add("text-4xl");
 					valueDiv.textContent = "" + value;
 					const statDiv = document.createElement("div");
-					statDiv.classList.add("font-light", "tracking-wide", "-mt-1", "underline", "decoration-1", decorationColor);
+					statDiv.classList.add(
+						"font-light",
+						"tracking-wide",
+						"-mt-1",
+						"underline",
+						"decoration-1",
+						decorationColor,
+					);
 					statDiv.textContent = stat;
 					div.appendChild(valueDiv);
 					div.appendChild(statDiv);
@@ -504,29 +674,60 @@ const title = "Image Classifier - Classify";
 				firstLoad = false;
 			}
 
-			const spinner = document.getElementById("spinner");
+			// const spinner = document.getElementById("spinner");
 
 			function showSpinner() {
-				spinner?.classList.remove("hidden");
-				spinner?.classList.add("flex");
+				waitForElement("#spinner").then((element) => {
+					const spinner = element as HTMLElement;
+					spinner?.classList.remove("hidden");
+					spinner?.classList.add("flex");
+				});
 			}
 
 			function hideSpinner() {
-				spinner?.classList.add("hidden");
-				spinner?.classList.remove("flex");
+				waitForElement("#spinner").then((element) => {
+					const spinner = element as HTMLElement;
+					spinner?.classList.remove("flex");
+					spinner?.classList.add("hidden");
+				});
+			}
+
+			function waitForElement(selector: string) {
+				return new Promise(resolve => {
+					if (document.querySelector(selector)) {
+						return resolve(document.querySelector(selector));
+					}
+
+					const observer = new MutationObserver(mutations => {
+						if (document.querySelector(selector)) {
+							observer.disconnect();
+							resolve(document.querySelector(selector));
+						}
+					});
+
+					// If you get "parameter 1 is not of type 'Node'" error, see https://stackoverflow.com/a/77855838/492336
+					observer.observe(document.body, {
+						childList: true,
+						subtree: true
+					});
+				});
 			}
 
 			// Function to download data to a file
-			function downloadTextFile(data: string, filename:string, type = 'text/plain;charset=utf-8;') {
-				const file = new Blob([data], {type: type});
+			function downloadTextFile(
+				data: string,
+				filename: string,
+				type = "text/plain;charset=utf-8;",
+			) {
+				const file = new Blob([data], { type: type });
 				const url = URL.createObjectURL(file);
 				const a = document.createElement("a");
-						
+
 				a.href = url;
 				a.download = filename;
 				a.click();
-				setTimeout(function() {
-					URL.revokeObjectURL(url);  
+				setTimeout(function () {
+					URL.revokeObjectURL(url);
 				}, 0);
 			}
 		</script>
