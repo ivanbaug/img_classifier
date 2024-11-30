@@ -93,12 +93,20 @@ const title = "Image Classifier - Classify";
 				image?: string;
 				stats?: StatItem[];
 				predicted?: ImageType;
+				errored_images?: ErrorImageData[];
 			}
 
 			// Statistical data types
 			interface StatItem {
 				class?: string;
 				amount: number;
+			}
+
+			// Data from errored images
+			interface ErrorImageData {
+				image_path?: string;
+				timestamp?: Date;
+				traceback?: string;
 			}
 
 			// Image classification types
@@ -196,15 +204,28 @@ const title = "Image Classifier - Classify";
 						},
 					);
 
-					const data = await response.json();
+					const data = await response.json() as ImageResponse;
 
 					if (data.success === false) {
 						displayStats(data);
 						alert(data.info);
+						if (data.errored_images && data.errored_images.length > 0) {
+							let errMsg = "";
+							data.errored_images.sort((a, b) => {
+								if (a.timestamp && b.timestamp) {
+									return a.timestamp > b.timestamp ? 1 : -1;
+								}
+								return 0;
+							});
+							data.errored_images.forEach((errorData) => {
+								errMsg += `${errorData.timestamp} - ${errorData.image_path}\n`;
+							});
+							downloadTextFile(errMsg, `error_images_session_${sessionId}.txt`);
+						}
 						return;
 					}
 
-					currentFilename = data.filename;
+					currentFilename = data.filename || "";
 					// check file type by reading the file extension
 					const fileExt = currentFilename.split(".").pop();
 					const contentType = getContentType(fileExt);
@@ -267,7 +288,7 @@ const title = "Image Classifier - Classify";
 					});
 
 					const statusCode = response.status;
-					const data = await response.json();
+					const data = await response.json() as ImageResponse;
 					console.log(data);
 
 					if (statusCode === 200) {
@@ -275,10 +296,23 @@ const title = "Image Classifier - Classify";
 							displayStats(data);
 							alert(data.info);
 							hideSpinner();
+							if (data.errored_images && data.errored_images.length > 0) {
+								let errMsg = "";
+								data.errored_images.sort((a, b) => {
+									if (a.timestamp && b.timestamp) {
+										return a.timestamp > b.timestamp ? 1 : -1;
+									}
+									return 0;
+								});
+								data.errored_images.forEach((errorData) => {
+									errMsg += `${errorData.timestamp} - ${errorData.image_path}\n`;
+								});
+								downloadTextFile(errMsg, `error_images_session_${sessionId}.txt`);
+							}
 							return;
 						}
 
-						currentFilename = data.filename;
+						currentFilename = data.filename || "";
 						// check file type by reading the file extension
 						const fileExt = currentFilename.split(".").pop();
 						const contentType = getContentType(fileExt);
@@ -480,6 +514,20 @@ const title = "Image Classifier - Classify";
 			function hideSpinner() {
 				spinner?.classList.add("hidden");
 				spinner?.classList.remove("flex");
+			}
+
+			// Function to download data to a file
+			function downloadTextFile(data: string, filename:string, type = 'text/plain;charset=utf-8;') {
+				const file = new Blob([data], {type: type});
+				const url = URL.createObjectURL(file);
+				const a = document.createElement("a");
+						
+				a.href = url;
+				a.download = filename;
+				a.click();
+				setTimeout(function() {
+					URL.revokeObjectURL(url);  
+				}, 0);
 			}
 		</script>
 	</main>
