@@ -281,7 +281,7 @@ def get_unprocessed_prediction(db_filepath: str, session_id: int) -> tuple[str, 
             WITH unprocessed_count AS (
                 SELECT label, COUNT(*) AS unprocessed_total
                 FROM prediction
-                WHERE processed = 0
+                WHERE session_id = ? AND processed = 0 AND name IS NOT NULL AND name != ""
                 GROUP BY label
                 HAVING unprocessed_total > 0
                 ORDER BY unprocessed_total ASC
@@ -289,12 +289,12 @@ def get_unprocessed_prediction(db_filepath: str, session_id: int) -> tuple[str, 
             )
             SELECT name, label
             FROM prediction
-            WHERE session_id=? AND processed=?
+            WHERE session_id=? AND processed=? AND name IS NOT NULL AND name != ""
             AND label = (SELECT label FROM unprocessed_count)
             LIMIT 1
             '''
     with db_ops(db_filepath) as cursor:
-        cursor.execute(query, (session_id, False))
+        cursor.execute(query, (session_id, session_id, False))
         row = cursor.fetchone()
         if row is not None:
             return row[0], row[1] # filename, label
