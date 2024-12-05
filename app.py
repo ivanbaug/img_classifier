@@ -263,4 +263,4 @@ def refresh_image_init_data():
 
 if __name__ == '__main__':
     initialize_images_in_db()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)
